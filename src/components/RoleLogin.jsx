@@ -12,7 +12,6 @@ export default function RoleLogin() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-300">
       <div className="w-[90%] max-w-sm bg-white rounded-2xl shadow-lg p-8 text-center">
         <div className="flex flex-col items-center mb-6">
-          <Bus className="text-blue-700 w-12 h-12 mb-2" />
           <h1 className="text-2xl font-bold text-gray-800">Selamat Datang</h1>
           <p className="text-lg font-semibold text-blue-700">SmartBus UIN IB</p>
           <p className="text-gray-500 text-sm mt-2">Login Sebagai</p>
