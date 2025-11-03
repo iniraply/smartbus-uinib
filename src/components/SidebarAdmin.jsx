@@ -8,7 +8,7 @@ export default function SidebarAdmin() {
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Data Driver", path: "/admin/datadriver" },
     { name: "Data Penumpang", path: "/admin/datapenumpang" },
-    { name: "Jadwal Operasioanl", path: "/admin/jadwal" },
+    { name: "Jadwal Operasional", path: "/admin/jadwal" },
     { name: "Laporan", path: "/admin/laporan" },
     { name: "Logout", path: "/admin/logout" },
   ];
