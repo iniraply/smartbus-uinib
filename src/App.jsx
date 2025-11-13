@@ -3,11 +3,12 @@ import RoleLogin from "./components/RoleLogin";
 import LoginDriver from "./pages/LoginDriver";
 import LoginPenumpang from "./pages/LoginPenumpang";
 import LoginAdmin from "./pages/LoginAdmin";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminDataDriver from "./pages/AdminDataDriver";
-import AdminDataPenumpang from "./pages/AdminDataPenumpang";
-import AdminJadwal from "./pages/AdminJadwal";
-import AdminLaporan from "./pages/AdminLaporan";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDataDriver from "./pages/admin/AdminDataDriver";
+import AdminDataPenumpang from "./pages/admin/AdminDataPenumpang";
+import AdminJadwal from "./pages/admin/AdminJadwal";
+import AdminLaporan from "./pages/admin/AdminLaporan";
+import AdminLogout from "./pages/Admin/AdminLogout";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin/datapenumpang" element={<AdminDataPenumpang />} />
         <Route path="/admin/jadwal" element={<AdminJadwal />} />
         <Route path="/admin/laporan" element={<AdminLaporan />} />
+        <Route path="/admin/logout" element={<AdminLogout />} />
       </Routes>
     </Router>
   );
