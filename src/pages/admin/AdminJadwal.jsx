@@ -1,33 +1,30 @@
 // src/pages/AdminDataDriver.jsx
-import NavbarAdmin from "../components/NavbarAdmin";
-import SidebarAdmin from "../components/SidebarAdmin";
+import NavbarAdmin from "../../components/NavbarAdmin";
+import SidebarAdmin from "../../components/SidebarAdmin";
 import { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 
-export default function AdminDataPenumpang() {
+export default function AdminJadwal() {
   const [drivers, setDrivers] = useState([
     {
       id: "01",
-      nama: "Budi Santoso",
-      username: "budi01",
-      email: "budi@uinib.ac.id",
-      password: "******",
+      nama: "Bus 1",
+      username: "Kampus 3",
+      email: "6:30",
       aktif: true,
     },
     {
       id: "02",
-      nama: "Rahmat Hidayat",
-      username: "rahmat02",
-      email: "rahmat@uinib.ac.id",
-      password: "******",
+      nama: "Bus 2",
+      username: "Kampus 2",
+      email: "8:30",
       aktif: true,
     },
     {
       id: "03",
-      nama: "Siti Aminah",
-      username: "siti03",
-      email: "siti@uinib.ac.id",
-      password: "******",
+      nama: "Bus 1",
+      username: "Kampus 2",
+      email: "10:00",
       aktif: false,
     },
   ]);
@@ -45,7 +42,9 @@ export default function AdminDataPenumpang() {
         <SidebarAdmin />
         <main className="flex-1 p-6 bg-gray-50 overflow-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-700">Data Penumpang</h2>
+            <h2 className="text-xl font-bold text-gray-700">
+              Jadwal Operasional
+            </h2>
             <button
               onClick={handleTambah}
               className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
@@ -72,10 +71,9 @@ export default function AdminDataPenumpang() {
               <thead>
                 <tr className="bg-gray-200 text-left">
                   <th className="p-2 border">No</th>
-                  <th className="p-2 border">Nama Penumpang</th>
-                  <th className="p-2 border">Username</th>
-                  <th className="p-2 border">Email</th>
-                  <th className="p-2 border">Password</th>
+                  <th className="p-2 border">Nama Bus</th>
+                  <th className="p-2 border">Tujuan</th>
+                  <th className="p-2 border">Waktu Keberangkatan</th>
                   <th className="p-2 border text-center">Aksi</th>
                 </tr>
               </thead>
@@ -86,7 +84,6 @@ export default function AdminDataPenumpang() {
                     <td className="p-2 border">{d.nama}</td>
                     <td className="p-2 border">{d.username}</td>
                     <td className="p-2 border">{d.email}</td>
-                    <td className="p-2 border">{d.password}</td>
                     <td className="p-2 border text-center">
                       <div className="flex justify-center gap-3">
                         <button

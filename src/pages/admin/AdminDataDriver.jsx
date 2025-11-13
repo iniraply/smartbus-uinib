@@ -1,31 +1,31 @@
 // src/pages/AdminDataDriver.jsx
-import NavbarAdmin from "../components/NavbarAdmin";
-import SidebarAdmin from "../components/SidebarAdmin";
+import NavbarAdmin from "../../components/NavbarAdmin";
+import SidebarAdmin from "../../components/SidebarAdmin";
 import { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 
-export default function AdminJadwal() {
+export default function AdminDataDriver() {
   const [drivers, setDrivers] = useState([
     {
       id: "01",
-      nama: "Bus 1",
-      username: "Kampus 3",
-      email: "6:30",
-      aktif: true,
+      nama: "Budi Santoso",
+      username: "budi01",
+      email: "budi@uinib.ac.id",
+      password: "******",
     },
     {
       id: "02",
-      nama: "Bus 2",
-      username: "Kampus 2",
-      email: "8:30",
-      aktif: true,
+      nama: "Rahmat Hidayat",
+      username: "rahmat02",
+      email: "rahmat@uinib.ac.id",
+      password: "******",
     },
     {
       id: "03",
-      nama: "Bus 1",
-      username: "Kampus 2",
-      email: "10:00",
-      aktif: false,
+      nama: "Siti Aminah",
+      username: "siti03",
+      email: "siti@uinib.ac.id",
+      password: "******",
     },
   ]);
 
@@ -35,6 +35,17 @@ export default function AdminJadwal() {
     );
   };
 
+  const handleEdit = (id) => {
+    alert(`Edit data driver dengan ID: ${id}`);
+  };
+
+  const handleDelete = (id) => {
+    const konfirmasi = confirm(`Yakin ingin menghapus driver ${id}?`);
+    if (konfirmasi) {
+      setDrivers(drivers.filter((d) => d.id !== id));
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <NavbarAdmin />
@@ -42,9 +53,7 @@ export default function AdminJadwal() {
         <SidebarAdmin />
         <main className="flex-1 p-6 bg-gray-50 overflow-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-700">
-              Jadwal Operasional
-            </h2>
+            <h2 className="text-xl font-bold text-gray-700">Data Driver</h2>
             <button
               onClick={handleTambah}
               className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
@@ -71,9 +80,10 @@ export default function AdminJadwal() {
               <thead>
                 <tr className="bg-gray-200 text-left">
                   <th className="p-2 border">No</th>
-                  <th className="p-2 border">Nama Bus</th>
-                  <th className="p-2 border">Tujuan</th>
-                  <th className="p-2 border">Waktu Keberangkatan</th>
+                  <th className="p-2 border">Nama Driver</th>
+                  <th className="p-2 border">Username</th>
+                  <th className="p-2 border">Email</th>
+                  <th className="p-2 border">Password</th>
                   <th className="p-2 border text-center">Aksi</th>
                 </tr>
               </thead>
@@ -84,6 +94,7 @@ export default function AdminJadwal() {
                     <td className="p-2 border">{d.nama}</td>
                     <td className="p-2 border">{d.username}</td>
                     <td className="p-2 border">{d.email}</td>
+                    <td className="p-2 border">{d.password}</td>
                     <td className="p-2 border text-center">
                       <div className="flex justify-center gap-3">
                         <button

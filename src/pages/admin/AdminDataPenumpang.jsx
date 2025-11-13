@@ -1,10 +1,10 @@
 // src/pages/AdminDataDriver.jsx
-import NavbarAdmin from "../components/NavbarAdmin";
-import SidebarAdmin from "../components/SidebarAdmin";
+import NavbarAdmin from "../../components/NavbarAdmin";
+import SidebarAdmin from "../../components/SidebarAdmin";
 import { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 
-export default function AdminDataDriver() {
+export default function AdminDataPenumpang() {
   const [drivers, setDrivers] = useState([
     {
       id: "01",
@@ -12,6 +12,7 @@ export default function AdminDataDriver() {
       username: "budi01",
       email: "budi@uinib.ac.id",
       password: "******",
+      aktif: true,
     },
     {
       id: "02",
@@ -19,6 +20,7 @@ export default function AdminDataDriver() {
       username: "rahmat02",
       email: "rahmat@uinib.ac.id",
       password: "******",
+      aktif: true,
     },
     {
       id: "03",
@@ -26,6 +28,7 @@ export default function AdminDataDriver() {
       username: "siti03",
       email: "siti@uinib.ac.id",
       password: "******",
+      aktif: false,
     },
   ]);
 
@@ -35,17 +38,6 @@ export default function AdminDataDriver() {
     );
   };
 
-  const handleEdit = (id) => {
-    alert(`Edit data driver dengan ID: ${id}`);
-  };
-
-  const handleDelete = (id) => {
-    const konfirmasi = confirm(`Yakin ingin menghapus driver ${id}?`);
-    if (konfirmasi) {
-      setDrivers(drivers.filter((d) => d.id !== id));
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen">
       <NavbarAdmin />
@@ -53,7 +45,7 @@ export default function AdminDataDriver() {
         <SidebarAdmin />
         <main className="flex-1 p-6 bg-gray-50 overflow-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-700">Data Driver</h2>
+            <h2 className="text-xl font-bold text-gray-700">Data Penumpang</h2>
             <button
               onClick={handleTambah}
               className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition"
@@ -80,7 +72,7 @@ export default function AdminDataDriver() {
               <thead>
                 <tr className="bg-gray-200 text-left">
                   <th className="p-2 border">No</th>
-                  <th className="p-2 border">Nama Driver</th>
+                  <th className="p-2 border">Nama Penumpang</th>
                   <th className="p-2 border">Username</th>
                   <th className="p-2 border">Email</th>
                   <th className="p-2 border">Password</th>
