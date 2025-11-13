@@ -1,83 +1,66 @@
-import { useState } from "react";
-import { MapPin, Bus, Calendar, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Home, Power, Calendar } from "lucide-react";
 
-export default function DriverHome() {
-  const [activeTab, setActiveTab] = useState("beranda");
+const DriverHome = () => {
+  const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-md py-4 px-6 text-center relative">
+      <header className="bg-gray-100 text-center py-3 shadow-sm">
         <h1 className="text-lg font-semibold">SmartBus UIN IB</h1>
-        <p className="text-sm text-gray-600">Hello Driver!</p>
-        <div className="absolute right-6 top-4 cursor-pointer">
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-            alt="profile"
-            className="w-6 h-6"
-          />
-        </div>
       </header>
 
-      {/* Konten */}
+      {/* Main Content */}
       <main className="flex-1 p-4 flex flex-col items-center">
-        <div className="w-full max-w-sm">
-          {/* Jadwal Hari Ini */}
-          <div className="bg-white shadow rounded-xl p-4 mb-4">
-            <h2 className="font-medium text-gray-800 mb-2">Jadwal Hari Ini</h2>
-            <p className="text-sm text-gray-600">
-              Jumat, 17 Oktober 2025
-              <br />— Rute: Kampus II → Kampus I —
-            </p>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">
+          Hello Driver!
+        </h2>
+
+        <div className="w-full max-w-md space-y-4">
+          <div className="border rounded-lg p-3">
+            <h3 className="font-medium">Jadwal Hari Ini</h3>
+            <p className="text-sm text-gray-500">Jumat, 17 Oktober 2025</p>
           </div>
 
-          {/* Tombol Aktivasi */}
           <button
-            onClick={() => alert("Fitur Aktivasi Bus belum aktif.")}
-            className="w-full bg-green-600 text-white py-2 rounded-xl font-medium shadow hover:bg-green-700 transition mb-4"
+            onClick={() => navigate("/driver/aktivasi")}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
           >
             Aktivasi Bus
           </button>
 
-          {/* Peta Dummy */}
-          <div className="bg-gray-200 h-48 rounded-xl flex items-center justify-center text-gray-500">
-            <MapPin className="mr-2" /> Tampilan Peta
+          <div className="bg-gray-200 rounded-lg p-6 text-center text-gray-600">
+            Peta Lokasi Bus
           </div>
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bg-white shadow-inner py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 md:static md:mt-4">
-        <button
-          onClick={() => setActiveTab("beranda")}
-          className={`flex flex-col items-center ${
-            activeTab === "beranda" ? "text-green-600" : "text-gray-500"
-          }`}
-        >
-          <Home className="w-5 h-5" />
-          <span className="text-xs">Beranda</span>
+      {/* Navbar bawah */}
+      <nav className="flex justify-around border-t py-2 bg-white text-sm">
+        <button className="flex flex-col items-center text-blue-600 font-medium">
+          <Home size={20} />
+          <span className="text-xs mt-1">Beranda</span>
         </button>
 
         <button
-          onClick={() => setActiveTab("aktivasi")}
-          className={`flex flex-col items-center ${
-            activeTab === "aktivasi" ? "text-green-600" : "text-gray-500"
-          }`}
+          onClick={() => navigate("/driver/aktivasi")}
+          className="flex flex-col items-center text-gray-500 hover:text-blue-600"
         >
-          <Bus className="w-5 h-5" />
-          <span className="text-xs">Aktivasi</span>
+          <Power size={20} />
+          <span className="text-xs mt-1">Aktivasi</span>
         </button>
 
         <button
-          onClick={() => setActiveTab("jadwal")}
-          className={`flex flex-col items-center ${
-            activeTab === "jadwal" ? "text-green-600" : "text-gray-500"
-          }`}
+          onClick={() => navigate("/driver/jadwal")}
+          className="flex flex-col items-center text-gray-500 hover:text-blue-600"
         >
-          <Calendar className="w-5 h-5" />
-          <span className="text-xs">Jadwal</span>
+          <Calendar size={20} />
+          <span className="text-xs mt-1">Jadwal</span>
         </button>
       </nav>
     </div>
   );
-}
+};
+
+export default DriverHome;

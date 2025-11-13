@@ -10,6 +10,8 @@ import AdminJadwal from "./pages/admin/AdminJadwal";
 import AdminLaporan from "./pages/admin/AdminLaporan";
 import AdminLogout from "./pages/Admin/AdminLogout";
 import DriverHome from "./pages/driver/DriverHome";
+import DriverAktivasi from "./pages/driver/DriverAktivasi";
+import DriverJadwal from "./pages/driver/DriverJadwal";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/admin/laporan" element={<AdminLaporan />} />
         <Route path="/admin/logout" element={<AdminLogout />} />
         <Route path="/driver/home" element={<DriverHome />} />
+        <Route path="/driver/aktivasi" element={<DriverAktivasi />} />
+        <Route path="/driver/jadwal" element={<DriverJadwal />} />
       </Routes>
     </Router>
   );
