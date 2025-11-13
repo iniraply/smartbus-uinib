@@ -9,6 +9,7 @@ import AdminDataPenumpang from "./pages/admin/AdminDataPenumpang";
 import AdminJadwal from "./pages/admin/AdminJadwal";
 import AdminLaporan from "./pages/admin/AdminLaporan";
 import AdminLogout from "./pages/Admin/AdminLogout";
+import DriverHome from "./pages/driver/DriverHome";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/admin/jadwal" element={<AdminJadwal />} />
         <Route path="/admin/laporan" element={<AdminLaporan />} />
         <Route path="/admin/logout" element={<AdminLogout />} />
+        <Route path="/driver/home" element={<DriverHome />} />
       </Routes>
     </Router>
   );
