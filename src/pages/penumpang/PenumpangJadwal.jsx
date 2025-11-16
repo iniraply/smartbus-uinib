@@ -3,6 +3,7 @@
 import React from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import BottomNav from "../../components/BottomNav";
 
 // --- Placeholder Data Jadwal ---
 // Nanti ini akan Anda ambil dari API/Backend
@@ -14,99 +15,6 @@ const jadwalData = [
   { bus: "Bus 2", tujuan: "Kampus 2", waktu: "13:20", status: "Belum Aktif" },
   { bus: "Bus 1", tujuan: "Kampus 2", waktu: "16:00", status: "Belum Aktif" },
 ];
-
-// --- Placeholder untuk Bottom Nav ---
-// Gunakan komponen yang sama dari LacakBus.jsx
-const BottomNav = () => (
-  <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-lg flex justify-around items-center z-20">
-    <a
-      href="/penumpang/home"
-      className="flex flex-col items-center text-gray-500"
-    >
-      <svg
-        /* ...ikon beranda... */ className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 011 1v10a1 1 0 001 1m-6 0h6"
-        />
-      </svg>
-      <span className="text-xs">Beranda</span>
-    </a>
-    <a
-      href="/penumpang/lacak"
-      className="flex flex-col items-center text-gray-500"
-    >
-      <svg
-        /* ...ikon bus... */ className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8a1 1 0 001-1z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8a1 1 0 001-1zM17 16v1a1 1 0 01-1 1h-1m-6-16h8a1 1 0 011 1v3.5a1.5 1.5 0 01-1.5 1.5h-5a1.5 1.5 0 01-1.5-1.5V2a1 1 0 011-1z"
-        />
-      </svg>
-      <span className="text-xs">Lacak</span>
-    </a>
-    <a
-      href="/penumpang/jadwal"
-      className="flex flex-col items-center text-blue-600"
-    >
-      {" "}
-      {/* Ini halaman aktif */}
-      <svg
-        /* ...ikon jadwal... */ className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-      <span className="text-xs">Jadwal</span>
-    </a>
-    <a
-      href="/penumpang/lapor"
-      className="flex flex-col items-center text-gray-500"
-    >
-      <svg
-        /* ...ikon laporan... */ className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
-      <span className="text-xs">Laporan</span>
-    </a>
-  </nav>
-);
-// --- Akhir Placeholder ---
 
 function JadwalPenumpang() {
   const navigate = useNavigate();
