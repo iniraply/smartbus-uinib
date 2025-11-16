@@ -1,7 +1,9 @@
-// src/pages/RegistrasiPenumpang.jsx
+// src/pages/RegistrasiPenumpang.jsx (Dengan link Kembali ke Login)
+
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // <-- Pastikan Link di-impor
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
 function RegistrasiPenumpang() {
   const [formData, setFormData] = useState({
@@ -10,22 +12,23 @@ function RegistrasiPenumpang() {
     password: "",
     konfirmasiPassword: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showKonfirmasiPassword, setShowKonfirmasiPassword] = useState(false);
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const { username, email, password, konfirmasiPassword } = formData;
 
-  // Fungsi untuk menangani perubahan input
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Fungsi saat form disubmit
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    // Validasi password
     if (password !== konfirmasiPassword) {
       setError("Password dan Konfirmasi Password tidak cocok!");
       return;
@@ -35,21 +38,18 @@ function RegistrasiPenumpang() {
     setError("");
 
     try {
-      // Panggil API Backend!
       const body = { username, email, password };
       const res = await axios.post(
         "http://localhost:3001/api/auth/register/penumpang",
         body
       );
 
-      // Jika sukses
       setLoading(false);
-      alert(res.data.message); // Tampilkan "Registrasi berhasil!"
-      navigate("/login/penumpang"); // Arahkan ke halaman login
+      alert(res.data.message);
+      navigate("/login/penumpang");
     } catch (err) {
-      // Jika gagal
       setLoading(false);
-      setError(err.response.data.message); // Tampilkan "Email sudah terdaftar."
+      setError(err.response.data.message);
     }
   };
 
@@ -59,10 +59,15 @@ function RegistrasiPenumpang() {
         className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl"
         style={{ fontFamily: "sans-serif" }}
       >
-        {" "}
-        {/* Style mirip wireframe */}
-        <h1 className="text-3xl font-bold text-center">Buat Akun</h1>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">SmartBus UIN IB</h1>
+          <p className="mt-2 font-semibold text-gray-600">
+            Registrasi Penumpang
+          </p>
+        </div>
+
         <form onSubmit={onSubmit} className="space-y-4">
+          {/* ... (Input Username) ... */}
           <div>
             <input
               type="text"
@@ -74,6 +79,7 @@ function RegistrasiPenumpang() {
               required
             />
           </div>
+          {/* ... (Input Email) ... */}
           <div>
             <input
               type="email"
@@ -85,9 +91,11 @@ function RegistrasiPenumpang() {
               required
             />
           </div>
-          <div>
+
+          {/* ... (Input Password dengan ikon mata) ... */}
+          <div className="relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={password}
               onChange={onChange}
@@ -95,10 +103,23 @@ function RegistrasiPenumpang() {
               className="w-full px-4 py-3 border border-gray-300 rounded-md"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+              ) : (
+                <EyeIcon className="h-5 w-5 text-gray-500" />
+              )}
+            </button>
           </div>
-          <div>
+
+          {/* ... (Input Konfirmasi Password dengan ikon mata) ... */}
+          <div className="relative">
             <input
-              type="password"
+              type={showKonfirmasiPassword ? "text" : "password"}
               name="konfirmasiPassword"
               value={konfirmasiPassword}
               onChange={onChange}
@@ -106,11 +127,22 @@ function RegistrasiPenumpang() {
               className="w-full px-4 py-3 border border-gray-300 rounded-md"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowKonfirmasiPassword(!showKonfirmasiPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+            >
+              {showKonfirmasiPassword ? (
+                <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+              ) : (
+                <EyeIcon className="h-5 w-5 text-gray-500" />
+              )}
+            </button>
           </div>
 
-          {/* Tampilkan error jika ada */}
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
+          {/* ... (Tombol Daftar) ... */}
           <div className="pt-2">
             <button
               type="submit"
@@ -120,6 +152,17 @@ function RegistrasiPenumpang() {
               {loading ? "Mendaftar..." : "Daftar"}
             </button>
           </div>
+
+          {/* --- INI DIA TAMBAHANNYA --- */}
+          <p className="text-sm text-center text-gray-600">
+            Sudah punya akun?{" "}
+            <Link
+              to="/login/penumpang"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Login
+            </Link>
+          </p>
         </form>
       </div>
     </div>
