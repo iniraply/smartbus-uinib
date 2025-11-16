@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPinIcon, TruckIcon } from "@heroicons/react/24/solid";
 import BottomNav from "../../components/BottomNav";
@@ -6,13 +6,29 @@ import BottomNav from "../../components/BottomNav";
 function HomePenumpang() {
   const navigate = useNavigate(); // Kita aktifkan lagi
 
-  const userName = "Wilda";
+  const [userName, setUserName] = useState("");
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+  useEffect(() => {
+    try {
+      // Ambil data 'user' yang kita simpan saat login
+      const userData = JSON.parse(localStorage.getItem("user"));
+
+      // 'userData.nama' adalah kolom 'username' Anda
+      if (userData && userData.nama) {
+        // Opsional: Buat huruf pertama jadi kapital (misal: "wildaa" -> "Wildaa")
+        const name =
+          userData.nama.charAt(0).toUpperCase() + userData.nama.slice(1);
+        setUserName(name);
+      }
+    } catch (e) {
+      console.error("Gagal mengambil data user dari localStorage", e);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
@@ -20,8 +36,7 @@ function HomePenumpang() {
       <main className="flex-grow overflow-y-auto pb-20 p-4 space-y-4">
                 {/* Kartu 1: Selamat Datang */}       {" "}
         <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                    {/* INI PERBAIKANNYA: Menggunakan TruckIcon */}
-                   {" "}
+                    {/* INI PERBAIKANNYA: Menggunakan TruckIcon */}         {" "}
           <TruckIcon className="h-12 w-12 text-blue-600 mx-auto mb-2" />       
             <h1 className="text-xl font-bold">SmartBus UIN IB</h1>         {" "}
           <p className="text-gray-600 mt-2">
