@@ -17,6 +17,7 @@ import HomePenumpang from "./pages/penumpang/HomePenumpang";
 import PenumpangLacak from "./pages/penumpang/PenumpangLacak";
 import PenumpangJadwal from "./pages/penumpang/PenumpangJadwal";
 import PenumpangLaporan from "./pages/penumpang/PenumpangLaporan";
+import RegistrasiPenumpang from "./pages/RegistrasiPenumpang";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/penumpang/lacak" element={<PenumpangLacak />} />
         <Route path="/penumpang/jadwal" element={<PenumpangJadwal />} />
         <Route path="/penumpang/lapor" element={<PenumpangLaporan />} />
+        <Route path="/registrasi/penumpang" element={<RegistrasiPenumpang />} />
       </Routes>
     </Router>
   );
