@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "leaflet/dist/leaflet.css";
 import RoleLogin from "./components/RoleLogin";
 import LoginDriver from "./pages/LoginDriver";
 import LoginPenumpang from "./pages/LoginPenumpang";
@@ -12,7 +13,10 @@ import AdminLogout from "./pages/Admin/AdminLogout";
 import DriverHome from "./pages/driver/DriverHome";
 import DriverAktivasi from "./pages/driver/DriverAktivasi";
 import DriverJadwal from "./pages/driver/DriverJadwal";
-import PenumpangHome from "./pages/penumpang/PenumpangHome";
+import HomePenumpang from "./pages/penumpang/HomePenumpang";
+import PenumpangLacak from "./pages/penumpang/PenumpangLacak";
+import PenumpangJadwal from "./pages/penumpang/PenumpangJadwal";
+import PenumpangLaporan from "./pages/penumpang/PenumpangLaporan";
 
 function App() {
   return (
@@ -31,7 +35,10 @@ function App() {
         <Route path="/driver/home" element={<DriverHome />} />
         <Route path="/driver/aktivasi" element={<DriverAktivasi />} />
         <Route path="/driver/jadwal" element={<DriverJadwal />} />
-        <Route path="/penumpang/home" element={<PenumpangHome />} />
+        <Route path="/penumpang/home" element={<HomePenumpang />} />
+        <Route path="/penumpang/lacak" element={<PenumpangLacak />} />
+        <Route path="/penumpang/jadwal" element={<PenumpangJadwal />} />
+        <Route path="/penumpang/lapor" element={<PenumpangLaporan />} />
       </Routes>
     </Router>
   );
