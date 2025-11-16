@@ -1,85 +1,119 @@
-import NavbarAdmin from "../../components/NavbarAdmin";
-import SidebarAdmin from "../../components/SidebarAdmin";
-import { useState } from "react";
+// src/pages/admin/AdminLaporan.jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { TrashIcon } from "@heroicons/react/24/solid";
+import SidebarAdmin from "../../components/SidebarAdmin"; // Impor Sidebar
 
-export default function AdminLaporan() {
-  const [laporan, setLaporan] = useState([
-    {
-      id: 1,
-      nama: "Diandra Marsha",
-      isi: "Pelayanan busnya bagus",
-      tanggal: "18 Oktober 2025",
-    },
-    {
-      id: 2,
-      nama: "Rafi Hidayat",
-      isi: "GPS bus kadang delay, tolong diperbaiki 🙏",
-      tanggal: "17 Oktober 2025",
-    },
-    {
-      id: 3,
-      nama: "Siti Nurhaliza",
-      isi: "Jadwal bus sore sering terlambat.",
-      tanggal: "15 Oktober 2025",
-    },
-  ]);
+function AdminLaporan() {
+  const [laporanList, setLaporanList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleDetail = (id) => {
-    alert(`Detail laporan ID ${id} (belum dihubungkan ke backend).`);
+  const getAuthToken = () => localStorage.getItem("token");
+  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+
+  // --- 1. FUNGSI READ (GET ALL LAPORAN) ---
+  const fetchLaporan = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(
+        "http://localhost:3001/api/admin/laporan",
+        config
+      );
+      setLaporanList(res.data);
+    } catch (err) {
+      setError(
+        "Gagal mengambil data laporan. " +
+          (err.response?.data?.message || err.message)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLaporan();
+  }, []);
+
+  // --- 2. FUNGSI DELETE (HAPUS LAPORAN) ---
+  const handleDelete = async (id) => {
+    if (window.confirm("Anda yakin ingin menghapus laporan ini?")) {
+      setError("");
+      try {
+        await axios.delete(
+          `http://localhost:3001/api/admin/laporan/${id}`,
+          config
+        );
+        alert("Laporan berhasil dihapus.");
+        fetchLaporan(); // Muat ulang daftar laporan
+      } catch (err) {
+        setError(err.response?.data?.message || "Gagal menghapus laporan.");
+      }
+    }
+  };
+
+  // Fungsi untuk format tanggal (opsional tapi bagus)
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <NavbarAdmin />
-      <div className="flex flex-1">
-        <SidebarAdmin />
-        <main className="flex-1 bg-gray-50 p-6 overflow-auto">
-          {/* Header */}
-          <h2 className="text-xl font-bold text-gray-700 mb-6">
-            Laporan Penumpang
-          </h2>
+    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
+      <SidebarAdmin />
 
-          {/* Daftar laporan */}
-          <div className="flex flex-col space-y-4">
-            {laporan.map((item, index) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-start bg-white shadow-sm border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-              >
-                {/* Kiri */}
-                <div className="flex items-start space-x-4">
-                  {/* Titik garis timeline */}
-                  <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 bg-red-700 rounded-full"></div>
-                    {index < laporan.length - 1 && (
-                      <div className="w-[2px] h-10 bg-gray-300"></div>
-                    )}
-                  </div>
+      <main className="flex-grow p-8 bg-gray-100 min-h-screen">
+        <h1 className="text-3xl font-bold mb-6">Laporan Penumpang</h1>
 
-                  {/* Info laporan */}
-                  <div>
-                    <h3 className="font-semibold text-gray-800 text-base">
-                      {item.nama}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">{item.isi}</p>
-                    <button
-                      onClick={() => handleDetail(item.id)}
-                      className="text-sm bg-red-700 text-white px-3 py-1 rounded-md hover:bg-red-800 transition"
-                    >
-                      Detail Laporan
-                    </button>
-                  </div>
+        {loading && <p>Loading...</p>}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+
+        {/* --- Daftar Laporan --- */}
+        <div className="space-y-4">
+          {laporanList.length === 0 && !loading && (
+            <p className="text-gray-500">Belum ada laporan yang masuk.</p>
+          )}
+
+          {laporanList.map((laporan) => (
+            <div
+              key={laporan.id_laporan}
+              className="bg-white rounded-lg shadow p-5"
+            >
+              <div className="flex justify-between items-start">
+                {/* Info Laporan */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {laporan.subjek}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Dari:{" "}
+                    <span className="font-medium text-gray-700">
+                      {laporan.nama_pelapor}
+                    </span>
+                    &nbsp;|&nbsp; Tanggal:{" "}
+                    <span className="font-medium text-gray-700">
+                      {formatDate(laporan.tanggal)}
+                    </span>
+                  </p>
+                  <p className="text-gray-700">{laporan.deskripsi}</p>
                 </div>
 
-                {/* Kanan - tanggal */}
-                <div className="text-sm text-gray-500 whitespace-nowrap">
-                  {item.tanggal}
-                </div>
+                {/* Tombol Hapus */}
+                <button
+                  onClick={() => handleDelete(laporan.id_laporan)}
+                  className="text-red-500 hover:text-red-700 p-1"
+                  title="Hapus Laporan"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </button>
               </div>
-            ))}
-          </div>
-        </main>
-      </div>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
+
+export default AdminLaporan;
