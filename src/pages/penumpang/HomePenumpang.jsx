@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPinIcon, TruckIcon } from "@heroicons/react/24/solid";
+import { FaMapMarkerAlt, FaBus } from "react-icons/fa";
 import BottomNav from "../../components/BottomNav";
 
 function HomePenumpang() {
@@ -37,8 +38,8 @@ function HomePenumpang() {
                 {/* Kartu 1: Selamat Datang */}       {" "}
         <div className="bg-white shadow-md rounded-lg p-6 text-center">
                     {/* INI PERBAIKANNYA: Menggunakan TruckIcon */}         {" "}
-          <TruckIcon className="h-12 w-12 text-blue-600 mx-auto mb-2" />       
-            <h1 className="text-xl font-bold">SmartBus UIN IB</h1>         {" "}
+          <FaBus className="h-12 w-12 text-blue-600 mx-auto mb-2" />         {" "}
+          <h1 className="text-xl font-bold">SmartBus UIN IB</h1>         {" "}
           <p className="text-gray-600 mt-2">
                         Hello {userName}, Selamat Datang!          {" "}
           </p>
@@ -72,8 +73,8 @@ function HomePenumpang() {
             <div className="absolute w-full h-1 bg-yellow-400 transform -rotate-12"></div>
                        {" "}
             <div className="absolute w-full h-1 bg-yellow-400 transform rotate-12"></div>
-                        <MapPinIcon className="h-8 w-8 text-red-500 z-10" />   
-                   {" "}
+                        <FaMapMarkerAlt className="h-8 w-8 text-red-500 z-10" />
+                       {" "}
             <span className="absolute top-2 left-2 text-xs text-gray-400">
                             Peta Kampus            {" "}
             </span>

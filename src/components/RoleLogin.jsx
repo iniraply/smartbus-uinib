@@ -1,66 +1,64 @@
-import { useNavigate } from "react-router-dom";
-import { Bus } from "lucide-react";
+// src/components/RoleLogin.jsx (Dengan Ikon Bus)
 
-export default function RoleLogin() {
-  const navigate = useNavigate();
+import React from "react";
+import { Link } from "react-router-dom";
+// --- IMPOR DARI LIBRARY BARU: react-icons ---
+import { FaBus, FaUser, FaIdCard, FaShieldAlt } from "react-icons/fa";
 
-  const handleLogin = (role) => {
-    navigate(`/login/${role}`);
-  };
-
+function RoleLogin() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-300">
-      <div className="w-[90%] max-w-sm bg-white rounded-2xl shadow-lg p-8 text-center">
-        <div className="flex flex-col items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Selamat Datang</h1>
-          <p className="text-lg font-semibold text-blue-700">SmartBus UIN IB</p>
-          <p className="text-gray-500 text-sm mt-2">Login Sebagai</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 place-items-center">
-          <button
-            onClick={() => handleLogin("driver")}
-            className="w-28 h-28 bg-blue-100 hover:bg-blue-200 rounded-xl flex flex-col items-center justify-center shadow-md transition"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/1000/1000649.png"
-              alt="Driver"
-              className="w-10 h-10 mb-2"
-            />
-            <span className="font-semibold text-gray-700">Driver</span>
-          </button>
-
-          <button
-            onClick={() => handleLogin("penumpang")}
-            className="w-28 h-28 bg-blue-100 hover:bg-blue-200 rounded-xl flex flex-col items-center justify-center shadow-md transition"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/709/709496.png"
-              alt="Penumpang"
-              className="w-10 h-10 mb-2"
-            />
-            <span className="font-semibold text-gray-700">Penumpang</span>
-          </button>
-        </div>
-
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={() => handleLogin("admin")}
-            className="w-28 h-28 bg-blue-100 hover:bg-blue-200 rounded-xl flex flex-col items-center justify-center shadow-md transition"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png"
-              alt="Admin"
-              className="w-10 h-10 mb-2"
-            />
-            <span className="font-semibold text-gray-700">Admin</span>
-          </button>
-        </div>
-
-        <p className="text-center text-xs text-gray-400 mt-6">
-          © 2025 SmartBus UIN Imam Bonjol
+    // Kontainer utama: Full-screen, layout di tengah, dan latar belakang cerah
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-6">
+      {/* 1. Bagian Judul dan Ilustrasi (IKON BUS BARU) */}
+      <div className="text-center mb-10">
+        <FaBus className="w-24 h-24 text-blue-500 mx-auto" />
+        <h1 className="text-3xl font-bold text-gray-800 mt-4">
+          Selamat Datang di{" "}
+          <span className="text-blue-600">SmartBus UIN IB</span>
+        </h1>
+        <p className="text-lg text-gray-600 mt-2">
+          Silakan pilih peran Anda untuk melanjutkan.
         </p>
       </div>
+
+      {/* 2. Tombol Aksi */}
+      <div className="w-full max-w-sm space-y-4">
+        {/* Tombol 1: Penumpang */}
+        <Link
+          to="/login/penumpang"
+          className="group flex items-center justify-center w-full p-5 bg-blue-600 text-white rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          <FaUser className="h-6 w-6 mr-3" /> {/* <-- Ikon Baru */}
+          <span className="text-lg font-semibold">Saya Penumpang</span>
+        </Link>
+
+        {/* Tombol 2: Driver */}
+        <Link
+          to="/login/driver"
+          className="group flex items-center justify-center w-full p-5 bg-white text-gray-700 rounded-xl shadow-md border border-gray-200 transition-transform transform hover:scale-105 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          <FaIdCard className="h-6 w-6 mr-3 text-gray-500" />{" "}
+          {/* <-- Ikon Baru */}
+          <span className="text-lg font-semibold">Saya Driver</span>
+        </Link>
+
+        {/* Tombol 3: Admin */}
+        <Link
+          to="/login/admin"
+          className="group flex items-center justify-center w-full p-5 bg-white text-gray-700 rounded-xl shadow-md border border-gray-200 transition-transform transform hover:scale-105 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          <FaShieldAlt className="h-6 w-6 mr-3 text-gray-500" />{" "}
+          {/* <-- Ikon Baru */}
+          <span className="text-lg font-semibold">Login Admin</span>
+        </Link>
+      </div>
+
+      {/* Footer sederhana */}
+      <p className="text-gray-500 text-sm mt-12">
+        © 2025 SmartBus UIN Imam Bonjol
+      </p>
     </div>
   );
 }
+
+export default RoleLogin;
