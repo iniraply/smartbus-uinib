@@ -1,158 +1,481 @@
-// src/pages/LacakBus.jsx (FIXED)
+// src/pages/penumpang/PenumpangLacak.jsx (MODERN UI UPDATE)
 
-import React, { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import { useNavigate } from "react-router-dom"; // Asumsi Anda pakai react-router-dom
-import L from "leaflet"; // Import L untuk perbaikan ikon
+import React, { useState, useEffect, useRef } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  Polyline,
+} from "react-leaflet";
+import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { FaBus, FaMapMarkerAlt, FaChevronDown, FaCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import L from "leaflet";
 import BottomNav from "../../components/BottomNav";
 
-function LacakBus() {
-  const [selectedBus, setSelectedBus] = useState(null);
+// --- Fix Ikon Leaflet ---
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+// --- IKON CUSTOM ---
+const createBusIcon = () => {
+  const iconMarkup = renderToStaticMarkup(
+    <div className="relative flex items-center justify-center w-10 h-10">
+      <div className="absolute w-10 h-10 bg-blue-600 rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
+      <FaBus className="relative z-10 text-white w-5 h-5" />
+      <div className="absolute -bottom-1 w-3 h-3 bg-blue-600 rotate-45 border-b-2 border-r-2 border-white"></div>
+    </div>
+  );
+  return L.divIcon({
+    html: iconMarkup,
+    className: "custom-bus-icon",
+    iconSize: [40, 40],
+    iconAnchor: [20, 45],
+    popupAnchor: [0, -40],
+  });
+};
+
+const createUserIcon = () => {
+  const iconMarkup = renderToStaticMarkup(
+    <div className="relative flex items-center justify-center">
+      <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md z-20"></div>
+      <div className="absolute w-12 h-12 bg-blue-400 rounded-full opacity-30 animate-ping"></div>
+    </div>
+  );
+  return L.divIcon({
+    html: iconMarkup,
+    className: "custom-user-icon",
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+};
+
+// Ganti koordinat ini dengan hasil copy dari Google Maps Anda sebelumnya
+const DESTINATIONS = {
+  "Kampus 2": [-0.929989487161048, 100.38666960323135],
+  "Kampus 3": [-0.8108711135090128, 100.37100177052656],
+};
+
+// --- RUMUS HAVERSINE ---
+function calculateDistanceAndETA(
+  startLat,
+  startLng,
+  endLat,
+  endLng,
+  speedKmh = 25
+) {
+  const R = 6371;
+  const dLat = (endLat - startLat) * (Math.PI / 180);
+  const dLon = (endLng - startLng) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(startLat * (Math.PI / 180)) *
+      Math.cos(endLat * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const distanceStraight = R * c;
+  const distanceRoad = distanceStraight * 1.4;
+  const timeHours = distanceRoad / speedKmh;
+  const timeMinutes = Math.ceil(timeHours * 60);
+
+  return {
+    distanceKm: distanceRoad.toFixed(1),
+    minutes: timeMinutes,
+  };
+}
+
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) map.flyTo(center, 15);
+  }, [center, map]);
+  return null;
+}
+
+function PenumpangLacak() {
+  const navigate = useNavigate();
+  const [activeBuses, setActiveBuses] = useState([]);
+  const [selectedBusId, setSelectedBusId] = useState("");
+  const [mapCenter, setMapCenter] = useState([
+    -0.8108711135090128, 100.37100177052656,
+  ]);
+  const [userLocation, setUserLocation] = useState(null);
+
+  // State UI
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // <-- Untuk Custom Dropdown
   const [showDestinationModal, setShowDestinationModal] = useState(false);
-  const [showEta, setShowEta] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [etaDestination, setEtaDestination] = useState(null);
+  const [etaToUser, setEtaToUser] = useState(null);
 
-  // Ambil koordinat dari UIN Imam Bonjol Padang sebagai pusat peta
-  const mapCenter = [-0.9163, 100.3541];
+  const pollingInterval = useRef(null);
+  const getAuthToken = () => localStorage.getItem("token");
 
-  // Placeholder lokasi bus
-  const busLocation = [-0.914, 100.355];
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        },
+        () => console.log("Gagal ambil lokasi user"),
+        { enableHighAccuracy: true }
+      );
+    }
+  }, []);
 
-  const navigate = useNavigate(); // Untuk tombol kembali
+  const fetchLocations = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:3001/api/penumpang/locations",
+        {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        }
+      );
+      setActiveBuses(res.data);
 
-  const handleBusSelect = (e) => {
-    const busId = e.target.value;
-    if (busId) {
-      setSelectedBus(busId);
-      setShowDestinationModal(true); // Tampilkan modal pilih tujuan
-    } else {
-      setSelectedBus(null);
-      setShowDestinationModal(false);
-      setShowEta(false);
+      if (selectedBusId) {
+        const bus = res.data.find((b) => b.id_bus === parseInt(selectedBusId));
+        if (bus) {
+          setMapCenter([parseFloat(bus.latitude), parseFloat(bus.longitude)]);
+
+          if (selectedDestination) {
+            const destCoords = DESTINATIONS[selectedDestination];
+            const eta = calculateDistanceAndETA(
+              parseFloat(bus.latitude),
+              parseFloat(bus.longitude),
+              destCoords[0],
+              destCoords[1]
+            );
+            setEtaDestination(eta.minutes);
+          }
+
+          if (userLocation) {
+            const etaUser = calculateDistanceAndETA(
+              parseFloat(bus.latitude),
+              parseFloat(bus.longitude),
+              userLocation[0],
+              userLocation[1],
+              30
+            );
+            setEtaToUser(etaUser);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Gagal ambil lokasi bus", err);
     }
   };
 
-  const handleDestinationSelect = (destination) => {
-    setShowDestinationModal(false); // Sembunyikan modal
-    setShowEta(true); // Tampilkan kartu ETA
-    // Di sini Anda akan memanggil API untuk mendapatkan ETA
+  useEffect(() => {
+    fetchLocations();
+    pollingInterval.current = setInterval(fetchLocations, 5000);
+    return () => {
+      if (pollingInterval.current) clearInterval(pollingInterval.current);
+    };
+  }, [selectedBusId, selectedDestination, userLocation]);
+
+  // Handle Pilih Bus
+  const handleBusSelect = (id) => {
+    setIsDropdownOpen(false); // Tutup dropdown setelah memilih
+
+    if (!id) {
+      setSelectedBusId("");
+      setEtaDestination(null);
+      setEtaToUser(null);
+      return;
+    }
+    const busIdInt = parseInt(id);
+    setSelectedBusId(busIdInt);
+
+    const bus = activeBuses.find((b) => b.id_bus === busIdInt);
+    if (bus && userLocation) {
+      const etaUser = calculateDistanceAndETA(
+        parseFloat(bus.latitude),
+        parseFloat(bus.longitude),
+        userLocation[0],
+        userLocation[1]
+      );
+      setEtaToUser(etaUser);
+    }
+
+    setShowDestinationModal(true);
   };
 
-  // Perbaiki masalah ikon Leaflet yang hilang
-  React.useEffect(() => {
-    (async () => {
-      delete L.Icon.Default.prototype._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: (await import("leaflet/dist/images/marker-icon-2x.png"))
-          .default,
-        iconUrl: (await import("leaflet/dist/images/marker-icon.png")).default,
-        shadowUrl: (await import("leaflet/dist/images/marker-shadow.png"))
-          .default,
-      });
-    })();
-  }, []);
+  const handleDestinationSelect = (tujuan) => {
+    setSelectedDestination(tujuan);
+    setShowDestinationModal(false);
+  };
+
+  const currentBus = activeBuses.find(
+    (b) => b.id_bus === parseInt(selectedBusId)
+  );
 
   return (
-    // Kontainer utama setinggi layar (h-screen)
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
-      {/* 1. Top Bar */}
-      <header className="flex items-center p-4 bg-white shadow-md z-10">
-        <button onClick={() => navigate(-1)} className="text-gray-700">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100 relative">
+      {/* Header Minimalis */}
+      <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
+        {/* Tombol Back (Pointer events auto agar bisa diklik) */}
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-white p-2 rounded-full shadow-lg text-gray-700 pointer-events-auto active:scale-95 transition-transform"
+        >
           <ArrowLeftIcon className="h-6 w-6" />
         </button>
-        <h1 className="text-xl font-semibold text-center flex-grow">
-          Lacak Bus
-        </h1>
-        <div className="w-6"></div> {/* Placeholder untuk spasi */}
       </header>
 
-      {/* 2. Kontainer Peta dan Elemen Interaktif */}
-      <main className="flex-grow relative">
-        {/* Peta Leaflet - Atur z-index lebih rendah */}
+      <main className="flex-grow relative z-0">
         <MapContainer
           center={mapCenter}
-          zoom={16}
+          zoom={14}
+          zoomControl={false} // Hilangkan kontrol zoom default agar lebih bersih
           scrollWheelZoom={true}
           className="h-full w-full"
-          style={{ zIndex: 0 }} // Menambahkan z-index rendah ke peta
+          style={{ zIndex: 0 }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution="&copy; OpenStreetMap"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <MapUpdater center={mapCenter} />
 
-          {/* Tampilkan marker bus jika sudah dipilih */}
-          {showEta && (
-            <Marker position={busLocation}>
-              <Popup>{selectedBus} - Perkiraan Lokasi</Popup>
+          {userLocation && (
+            <Marker position={userLocation} icon={createUserIcon()}>
+              <Popup>Lokasi Anda</Popup>
             </Marker>
+          )}
+
+          {activeBuses.map((bus) => (
+            <Marker
+              key={bus.id_bus}
+              position={[parseFloat(bus.latitude), parseFloat(bus.longitude)]}
+              icon={createBusIcon()}
+              eventHandlers={{
+                click: () => handleBusSelect(bus.id_bus),
+              }}
+            />
+          ))}
+
+          {selectedDestination && (
+            <Marker position={DESTINATIONS[selectedDestination]}>
+              <Popup>Tujuan: {selectedDestination}</Popup>
+            </Marker>
+          )}
+
+          {currentBus && selectedDestination && (
+            <Polyline
+              positions={[
+                [
+                  parseFloat(currentBus.latitude),
+                  parseFloat(currentBus.longitude),
+                ],
+                DESTINATIONS[selectedDestination],
+              ]}
+              pathOptions={{
+                color: "blue",
+                dashArray: "10, 10",
+                opacity: 0.6,
+                weight: 4,
+              }}
+            />
+          )}
+
+          {currentBus && userLocation && (
+            <Polyline
+              positions={[
+                [
+                  parseFloat(currentBus.latitude),
+                  parseFloat(currentBus.longitude),
+                ],
+                userLocation,
+              ]}
+              pathOptions={{
+                color: "gray",
+                dashArray: "5, 10",
+                opacity: 0.5,
+                weight: 3,
+              }}
+            />
           )}
         </MapContainer>
 
-        {/* --- Elemen UI di atas Peta (Overlays) --- */}
-
-        {/* Tahap 1: Pilih Bus (Dropdown) */}
-        {!showEta && (
-          // ***** PERUBAHAN DI SINI *****
-          <div className="absolute top-4 left-4 z-[1000]">
-            <select
-              onChange={handleBusSelect}
-              className="bg-white shadow-md rounded-md p-2 border border-gray-300"
+        {/* --- MODERN FLOATING SELECTOR (Pengganti Dropdown Lama) --- */}
+        <div className="absolute top-20 left-4 right-4 z-[500]">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all">
+            {/* Header Selector */}
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full p-4 flex items-center justify-between bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
-              <option value="">Pilih Bus</option>
-              <option value="Bus 1">Bus 1</option>
-              <option value="Bus 2">Bus 2</option>
-              <option value="Bus 3">Bus 3</option>
-            </select>
-          </div>
-        )}
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <FaBus className="text-blue-600 w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    Pilih Armada
+                  </p>
+                  <p className="text-sm font-bold text-gray-800 truncate">
+                    {currentBus
+                      ? `${currentBus.nama_bus} (${currentBus.rute})`
+                      : "Ketuk untuk memilih bus"}
+                  </p>
+                </div>
+              </div>
+              <FaChevronDown
+                className={`text-gray-400 transition-transform duration-300 ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-        {/* Tahap 2: Pilih Tujuan (Modal) */}
+            {/* Dropdown List (Animasi Expand) */}
+            {isDropdownOpen && (
+              <div className="border-t border-gray-100 max-h-60 overflow-y-auto animate-fade-in-down">
+                {activeBuses.length === 0 ? (
+                  <div className="p-4 text-center text-gray-400 text-sm">
+                    Tidak ada bus aktif saat ini.
+                  </div>
+                ) : (
+                  activeBuses.map((bus) => (
+                    <button
+                      key={bus.id_bus}
+                      onClick={() => handleBusSelect(bus.id_bus)}
+                      className="w-full p-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                    >
+                      <FaCircle className="text-green-500 w-2 h-2 ml-2" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-700">
+                          {bus.nama_bus}
+                        </p>
+                        <p className="text-xs text-gray-500">{bus.rute}</p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Modal Pilih Tujuan */}
         {showDestinationModal && (
-          // ***** PERUBAHAN DI SINI *****
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-              <h3 className="text-lg font-semibold mb-4">Pilih tujuan anda</h3>
-              <div className="flex gap-4">
+          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-bounce-in text-center">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800">Mau Kemana?</h3>
+                <button
+                  onClick={() => setShowDestinationModal(false)}
+                  className="p-1 bg-gray-100 rounded-full"
+                >
+                  <XMarkIcon className="h-6 w-6 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Info Jarak ke User */}
+              {etaToUser && (
+                <div className="mb-6 bg-blue-50 p-4 rounded-2xl border border-blue-100 text-left flex items-center gap-4">
+                  <div className="bg-blue-500 p-3 rounded-full text-white">
+                    <FaBus />
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-bold uppercase">
+                      Jarak Bus ke Anda
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-xl font-bold text-gray-800">
+                        {etaToUser.minutes}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        Menit ({etaToUser.distanceKm} km)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => handleDestinationSelect("Kampus 2")}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
                 >
-                  Kampus 2
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
+                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-blue-600" />
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-blue-700">
+                    Kampus 2
+                  </span>
                 </button>
                 <button
                   onClick={() => handleDestinationSelect("Kampus 3")}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
                 >
-                  Kampus 3
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
+                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-blue-600" />
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-blue-700">
+                    Kampus 3
+                  </span>
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tahap 3: Estimasi Waktu (Kartu di Bawah) */}
-        {showEta && (
-          // ***** PERUBAHAN DI SINI *****
-          <div className="absolute bottom-4 left-4 right-4 z-[1000] p-4 bg-white rounded-lg shadow-lg">
-            <h4 className="font-semibold">Estimasi Waktu Perjalanan</h4>
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-gray-700">{selectedBus}</span>
-              <span className="text-blue-600 font-bold">± 5 Menit</span>
+        {/* Panel Info ETA */}
+        {selectedBusId && etaDestination !== null && currentBus && (
+          <div className="absolute bottom-24 left-4 right-4 z-[500] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-4 flex justify-between items-center text-white">
+              <div>
+                <p className="text-[10px] opacity-80 font-bold uppercase tracking-wider">
+                  Tujuan
+                </p>
+                <p className="font-bold text-lg">{selectedDestination}</p>
+              </div>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="text-xs font-bold">LIVE TRACKING</span>
+              </div>
+            </div>
+
+            <div className="p-5 flex justify-between items-center">
+              <div>
+                <h4 className="font-bold text-xl text-gray-800">
+                  {currentBus.nama_bus}
+                </h4>
+                <p className="text-xs text-gray-500 mt-1 bg-gray-100 px-2 py-1 rounded inline-block">
+                  {currentBus.rute}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-400 font-semibold uppercase">
+                  Estimasi Tiba
+                </p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {etaDestination}
+                  <span className="text-sm text-gray-500 font-medium ml-1">
+                    mnt
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* 3. Bottom Navigation */}
-      {/* Ganti ini dengan komponen Navigasi Anda yang sebenarnya */}
-      <div className="pb-16">
-        {" "}
-        {/* Spacer untuk bottom nav */}
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 }
 
-export default LacakBus;
+export default PenumpangLacak;
