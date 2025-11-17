@@ -20,6 +20,7 @@ import PenumpangLaporan from "./pages/penumpang/PenumpangLaporan";
 import RegistrasiPenumpang from "./pages/RegistrasiPenumpang";
 import ProfilPenumpang from "./pages/penumpang/ProfilPenumpang";
 import AdminDataBus from "./pages/admin/AdminDataBus";
+import ProfilDriver from "./pages/driver/ProfilDriver";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
         <Route path="/registrasi/penumpang" element={<RegistrasiPenumpang />} />
         <Route path="/penumpang/profil" element={<ProfilPenumpang />} />
         <Route path="/admin/databus" element={<AdminDataBus />} />
+        <Route path="/driver/profil" element={<ProfilDriver />} />
       </Routes>
     </Router>
   );
