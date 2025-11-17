@@ -1,4 +1,4 @@
-// src/pages/penumpang/ProfilPenumpang.jsx (FIXED - Tanpa NAMA)
+// src/pages/penumpang/ProfilPenumpang.jsx (TAMPILAN BARU)
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,10 +9,10 @@ import {
   XMarkIcon,
   PowerIcon,
 } from "@heroicons/react/24/solid";
+import BottomNav from "../../components/BottomNav"; // Tetap pakai Navigasi Penumpang
 
 function ProfilPenumpang() {
   const navigate = useNavigate();
-  // State user sekarang hanya butuh email dan username
   const [user, setUser] = useState({ email: "", username: "" });
   const [showModal, setShowModal] = useState(false);
 
@@ -24,6 +24,7 @@ function ProfilPenumpang() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // --- FUNGSI LOGOUT ---
   const handleLogout = () => {
     if (window.confirm("Anda yakin ingin logout?")) {
       localStorage.removeItem("token");
@@ -32,27 +33,24 @@ function ProfilPenumpang() {
     }
   };
 
+  // --- AMBIL DATA USER ---
   useEffect(() => {
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
       if (userData) {
-        // Kita ambil 'nama' dari token/storage dan set sebagai 'username'
-        setUser({
-          email: userData.email,
-          username: userData.nama, // 'nama' dari token adalah username
-        });
+        const username = userData.username || userData.nama;
+        setUser({ email: userData.email, username });
       } else {
         navigate("/login/penumpang");
       }
     } catch (e) {
-      console.error("Gagal parse data user", e);
       navigate("/login/penumpang");
     }
   }, [navigate]);
 
+  // --- MODAL HANDLERS ---
   const handleEditClick = () => {
     setFormData({
-      // Hapus 'nama' dari sini
       email: user.email,
       username: user.username,
       password: "",
@@ -65,30 +63,21 @@ function ProfilPenumpang() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // --- SUBMIT UPDATE ---
   const handleModalSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     const token = localStorage.getItem("token");
-    if (!token) {
-      //... (handling token error)
-      return;
-    }
 
     try {
       const updateData = {
-        // Hapus 'nama' dari data yang dikirim
         email: formData.email,
         username: formData.username,
       };
+      if (formData.password) updateData.password = formData.password;
 
-      if (formData.password) {
-        updateData.password = formData.password;
-      }
-
-      const config = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
       const res = await axios.put(
         "http://localhost:3001/api/users/profile",
@@ -96,12 +85,10 @@ function ProfilPenumpang() {
         config
       );
 
-      // Update localStorage dengan data baru dari backend
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      // Set state user baru
       setUser({
         email: res.data.user.email,
-        username: res.data.user.nama, // 'nama' dari backend adalah username
+        username: res.data.user.nama,
       });
 
       setLoading(false);
@@ -109,7 +96,7 @@ function ProfilPenumpang() {
       alert("Profil berhasil diperbarui!");
     } catch (err) {
       setLoading(false);
-      setError(err.response.data.message || "Gagal memperbarui profil.");
+      setError(err.response?.data?.message || "Gagal memperbarui profil.");
     }
   };
 
@@ -126,34 +113,53 @@ function ProfilPenumpang() {
         <div className="w-6"></div>
       </header>
 
-      {/* Konten Profil */}
-      <main className="flex-grow p-4 space-y-4">
+      {/* Konten Profil (Style Baru ala Driver) */}
+      <main className="flex-grow p-4 space-y-4 pb-24">
         <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
-          <UserCircleIcon className="h-24 w-24 text-gray-400 mb-4" />
-          <div className="w-full space-y-2 text-left">
-            {/* --- KOLOM NAMA SUDAH DIHAPUS --- */}
+          {/* Lingkaran Biru di Belakang Ikon */}
+          <div className="bg-blue-100 p-4 rounded-full mb-4">
+            <UserCircleIcon className="h-20 w-20 text-blue-600" />
+          </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-500">
+          {/* Info User */}
+          <div className="w-full space-y-3 text-left">
+            <div className="border-b pb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">
                 Username
               </label>
-              <p className="text-lg font-semibold">{user.username}</p>
+              <p className="text-lg font-semibold text-gray-800">
+                {user.username}
+              </p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Email</label>
-              <p className="text-lg font-semibold">{user.email}</p>
+            <div className="border-b pb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">
+                Email
+              </label>
+              <p className="text-lg font-semibold text-gray-800">
+                {user.email}
+              </p>
+            </div>
+            <div className="pb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">
+                Peran
+              </label>
+              <p className="text-lg font-semibold text-blue-600">
+                Penumpang Umum
+              </p>
             </div>
           </div>
+
+          {/* Tombol Aksi */}
           <button
             onClick={handleEditClick}
-            className="mt-6 w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-blue-700"
+            className="mt-6 w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors"
           >
             Edit Profil
           </button>
 
           <button
             onClick={handleLogout}
-            className="mt-4 w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-red-700 flex items-center justify-center gap-2"
+            className="mt-3 w-full bg-white border-2 border-red-500 text-red-500 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-red-50 flex items-center justify-center gap-2 transition-colors"
           >
             <PowerIcon className="h-5 w-5" />
             Logout
@@ -164,38 +170,42 @@ function ProfilPenumpang() {
       {/* --- Modal Edit Profil --- */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-100">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">Edit Profil</h3>
+              <h3 className="text-lg font-bold text-gray-800">
+                Edit Data Diri
+              </h3>
               <button onClick={() => setShowModal(false)}>
-                <XMarkIcon className="h-6 w-6 text-gray-600" />
+                <XMarkIcon className="h-6 w-6 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
             <form onSubmit={handleModalSubmit} className="p-4 space-y-4">
-              {/* --- INPUT NAMA SUDAH DIHAPUS --- */}
-
               <div>
-                <label className="block text-sm font-medium">Username</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Email</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">
+                <label className="block text-sm font-medium text-gray-700">
                   Password Baru (Opsional)
                 </label>
                 <input
@@ -203,35 +213,40 @@ function ProfilPenumpang() {
                   name="password"
                   value={formData.password}
                   onChange={onModalChange}
-                  placeholder="Isi jika ingin ganti"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  placeholder="Kosongkan jika tidak diganti"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
 
               {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
+                <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">
+                  {error}
+                </p>
               )}
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md"
+                  className="px-4 py-2 text-gray-700 font-medium bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-md disabled:bg-gray-400"
+                  className="px-4 py-2 text-white font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors shadow-md"
                 >
-                  {loading ? "Menyimpan..." : "Simpan"}
+                  {loading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* BottomNav Penumpang */}
+      <BottomNav />
     </div>
   );
 }
