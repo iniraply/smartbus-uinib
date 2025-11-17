@@ -45,11 +45,10 @@ function DriverBottomNav() {
 
       {/* Profil Driver (bisa gunakan halaman ProfilPenumpang yang dimodifikasi atau buat baru) */}
       <Link
-        to="/driver/home"
-        className="flex flex-col items-center w-1/4 text-gray-500"
-        onClick={() =>
-          alert("Fitur Profil Driver: Bisa gunakan logic Logout di Beranda")
-        }
+        to="/driver/profil"
+        className={`flex flex-col items-center w-1/4 ${getClassName(
+          "/driver/profil"
+        )}`}
       >
         <FaUser className="h-6 w-6" />
         <span className="text-xs">Profil</span>
