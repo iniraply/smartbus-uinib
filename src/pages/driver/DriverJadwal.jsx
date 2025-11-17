@@ -1,78 +1,108 @@
+// src/pages/driver/DriverJadwal.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Power, Calendar } from "lucide-react";
+import axios from "axios";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import DriverBottomNav from "../../components/DriverBottomNav";
 
-const DriverJadwal = () => {
+function DriverJadwal() {
   const navigate = useNavigate();
+  const [jadwal, setJadwal] = useState([]);
+  const [busInfo, setBusInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const jadwalHariIni = [
-    { waktu: "07:00", rute: "Kampus I → Kampus II", status: "Selesai" },
-    { waktu: "09:30", rute: "Kampus II → Kampus III", status: "Berjalan" },
-    { waktu: "13:00", rute: "Kampus III → Asrama", status: "Belum Mulai" },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        // Kita pakai endpoint dashboard karena sudah memberikan data jadwal bus yg relevan
+        const res = await axios.get(
+          "http://localhost:3001/api/driver-app/dashboard",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.data.hasBus) {
+          setBusInfo(res.data.bus);
+          setJadwal(res.data.jadwal);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <header className="bg-gray-100 text-center py-3 shadow-sm">
-        <h1 className="text-lg font-semibold">Jadwal Bus</h1>
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
+      <header className="flex items-center p-4 bg-white shadow-md z-10 sticky top-0">
+        <button onClick={() => navigate(-1)} className="text-gray-700">
+          <ArrowLeftIcon className="h-6 w-6" />
+        </button>
+        <h1 className="text-xl font-semibold text-center flex-grow">
+          Jadwal Tugas
+        </h1>
+        <div className="w-6"></div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4">
-        <div className="w-full max-w-md mx-auto">
-          <h2 className="font-medium text-gray-700 mb-3">Jadwal Hari Ini</h2>
-          <div className="space-y-3">
-            {jadwalHariIni.map((item, index) => (
-              <div
-                key={index}
-                className="border rounded-md p-3 flex justify-between items-center hover:bg-gray-50 transition"
-              >
-                <div>
-                  <p className="text-sm font-semibold">{item.rute}</p>
-                  <p className="text-xs text-gray-500">{item.waktu}</p>
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-md ${
-                    item.status === "Selesai"
-                      ? "bg-green-100 text-green-700"
-                      : item.status === "Berjalan"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </div>
-            ))}
+      <main className="flex-grow overflow-y-auto pb-20 p-4">
+        {busInfo && (
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4 text-center">
+            <p className="text-sm text-blue-600">Unit Bus Anda</p>
+            <h2 className="text-xl font-bold text-blue-800">
+              {busInfo.nama_bus}
+            </h2>
+            <p className="text-xs text-gray-500">Rute: {busInfo.rute}</p>
           </div>
+        )}
+
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-gray-100 border-b">
+              <tr>
+                <th className="px-4 py-3 font-medium text-gray-700">Waktu</th>
+                <th className="px-4 py-3 font-medium text-gray-700">Tujuan</th>
+                <th className="px-4 py-3 font-medium text-gray-700">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {loading ? (
+                <tr>
+                  <td colSpan="3" className="p-4 text-center">
+                    Loading...
+                  </td>
+                </tr>
+              ) : jadwal.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="p-4 text-center">
+                    Tidak ada jadwal.
+                  </td>
+                </tr>
+              ) : (
+                jadwal.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-4 py-3 font-bold">
+                      {item.waktu.substring(0, 5)}
+                    </td>
+                    <td className="px-4 py-3">{item.rute}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                        Terjadwal
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </main>
 
-      {/* Navbar bawah */}
-      <nav className="flex justify-around border-t py-2 bg-white text-sm">
-        <button
-          onClick={() => navigate("/driver/home")}
-          className="flex flex-col items-center text-gray-500 hover:text-blue-600"
-        >
-          <Home size={20} />
-          <span className="text-xs mt-1">Beranda</span>
-        </button>
-
-        <button
-          onClick={() => navigate("/driver/aktivasi")}
-          className="flex flex-col items-center text-gray-500 hover:text-blue-600"
-        >
-          <Power size={20} />
-          <span className="text-xs mt-1">Aktivasi</span>
-        </button>
-
-        <button className="flex flex-col items-center text-blue-600 font-medium">
-          <Calendar size={20} />
-          <span className="text-xs mt-1">Jadwal</span>
-        </button>
-      </nav>
+      <DriverBottomNav />
     </div>
   );
-};
+}
 
 export default DriverJadwal;
