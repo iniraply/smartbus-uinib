@@ -140,8 +140,8 @@ function PenumpangJadwal() {
           <div className="bg-white shadow-md rounded-lg p-4">
             <h2 className="text-md font-semibold mb-2">Catatan</h2>
             <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-              <li>Jadwal dapat berubah sesuai kondisi lalu lintas.</li>
-              <li>Harap datang 5 menit sebelum jadwal keberangkatan.</li>
+              <li>Jadwal dapat berubah sesuai kondisi operasional.</li>
+              <li>Harap menunggu pada rute yang dilalui bus.</li>
             </ul>
           </div>
         </div>
