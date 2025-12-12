@@ -21,32 +21,49 @@ import RegistrasiPenumpang from "./pages/RegistrasiPenumpang";
 import ProfilPenumpang from "./pages/penumpang/ProfilPenumpang";
 import AdminDataBus from "./pages/admin/AdminDataBus";
 import ProfilDriver from "./pages/driver/ProfilDriver";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* --- HALAMAN PUBLIK (Bisa diakses siapa saja) --- */}
         <Route path="/" element={<RoleLogin />} />
         <Route path="/login/driver" element={<LoginDriver />} />
         <Route path="/login/penumpang" element={<LoginPenumpang />} />
         <Route path="/login/admin" element={<LoginAdmin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/datadriver" element={<AdminDataDriver />} />
-        <Route path="/admin/datapenumpang" element={<AdminDataPenumpang />} />
-        <Route path="/admin/jadwal" element={<AdminJadwal />} />
-        <Route path="/admin/laporan" element={<AdminLaporan />} />
-        <Route path="/admin/logout" element={<AdminLogout />} />
-        <Route path="/driver/home" element={<DriverHome />} />
-        <Route path="/driver/aktivasi" element={<DriverAktivasi />} />
-        <Route path="/driver/jadwal" element={<DriverJadwal />} />
-        <Route path="/penumpang/home" element={<HomePenumpang />} />
-        <Route path="/penumpang/lacak" element={<PenumpangLacak />} />
-        <Route path="/penumpang/jadwal" element={<PenumpangJadwal />} />
-        <Route path="/penumpang/lapor" element={<PenumpangLaporan />} />
-        <Route path="/registrasi/penumpang" element={<RegistrasiPenumpang />} />
-        <Route path="/penumpang/profil" element={<ProfilPenumpang />} />
-        <Route path="/admin/databus" element={<AdminDataBus />} />
-        <Route path="/driver/profil" element={<ProfilDriver />} />
+        <Route path="/register/penumpang" element={<RegistrasiPenumpang />} />
+
+        {/* --- HALAMAN KHUSUS ADMIN --- */}
+        {/* Hanya user dengan role 'admin' yang bisa masuk sini */}
+        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/datadriver" element={<AdminDataDriver />} />
+          <Route path="/admin/datapenumpang" element={<AdminDataPenumpang />} />
+          <Route path="/admin/jadwal" element={<AdminJadwal />} />
+          <Route path="/admin/databus" element={<AdminDataBus />} />
+          <Route path="/admin/laporan" element={<AdminLaporan />} />
+          <Route path="/admin/logout" element={<AdminLogout />} />
+        </Route>
+
+        {/* --- HALAMAN KHUSUS DRIVER --- */}
+        {/* Hanya user dengan role 'driver' yang bisa masuk sini */}
+        <Route element={<PrivateRoute allowedRoles={["driver"]} />}>
+          <Route path="/driver/home" element={<DriverHome />} />
+          <Route path="/driver/aktivasi" element={<DriverAktivasi />} />
+          <Route path="/driver/jadwal" element={<DriverJadwal />} />
+          <Route path="/driver/profil" element={<ProfilDriver />} />
+        </Route>
+
+        {/* --- HALAMAN KHUSUS PENUMPANG --- */}
+        {/* Hanya user dengan role 'penumpang' yang bisa masuk sini */}
+        <Route element={<PrivateRoute allowedRoles={["penumpang"]} />}>
+          <Route path="/penumpang/home" element={<HomePenumpang />} />
+          <Route path="/penumpang/lacak" element={<PenumpangLacak />} />
+          <Route path="/penumpang/jadwal" element={<PenumpangJadwal />} />
+          <Route path="/penumpang/lapor" element={<PenumpangLaporan />} />
+          <Route path="/penumpang/profil" element={<ProfilPenumpang />} />
+        </Route>
       </Routes>
     </Router>
   );
