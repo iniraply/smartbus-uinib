@@ -27,12 +27,21 @@ L.Icon.Default.mergeOptions({
 });
 
 // --- IKON CUSTOM ---
-const createBusIcon = () => {
+// Ubah fungsi ini agar menerima status
+const createBusIcon = (isFull) => {
+  // Warna: Merah jika penuh, Biru jika tersedia
+  const colorClass = isFull ? "bg-red-600" : "bg-blue-600";
+  const pointerClass = isFull ? "bg-red-600" : "bg-blue-600";
+
   const iconMarkup = renderToStaticMarkup(
     <div className="relative flex items-center justify-center w-10 h-10">
-      <div className="absolute w-10 h-10 bg-blue-600 rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
+      <div
+        className={`absolute w-10 h-10 ${colorClass} rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse`}
+      ></div>
       <FaBus className="relative z-10 text-white w-5 h-5" />
-      <div className="absolute -bottom-1 w-3 h-3 bg-blue-600 rotate-45 border-b-2 border-r-2 border-white"></div>
+      <div
+        className={`absolute -bottom-1 w-3 h-3 ${pointerClass} rotate-45 border-b-2 border-r-2 border-white`}
+      ></div>
     </div>
   );
   return L.divIcon({
@@ -259,18 +268,35 @@ function PenumpangLacak() {
             <Marker
               key={bus.id_bus}
               position={[parseFloat(bus.latitude), parseFloat(bus.longitude)]}
-              icon={createBusIcon()}
+              // --- UPDATE DI SINI: Cek status_penumpang ---
+              icon={createBusIcon(bus.status_penumpang === "Penuh")}
+              // --------------------------------------------
               eventHandlers={{
                 click: () => handleBusSelect(bus.id_bus),
               }}
-            />
-          ))}
+            >
+              <Popup className="custom-popup">
+                <div className="text-center">
+                  <h3 className="font-bold text-blue-600 text-sm">
+                    {bus.nama_bus}
+                  </h3>
+                  <p className="text-xs font-medium">{bus.rute}</p>
 
-          {selectedDestination && (
-            <Marker position={DESTINATIONS[selectedDestination]}>
-              <Popup>Tujuan: {selectedDestination}</Popup>
+                  {/* --- TAMBAHKAN INDIKATOR TEKS JUGA --- */}
+                  {bus.status_penumpang === "Penuh" ? (
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-full">
+                      PENUH
+                    </span>
+                  ) : (
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-full">
+                      TERSEDIA
+                    </span>
+                  )}
+                  {/* ------------------------------------- */}
+                </div>
+              </Popup>
             </Marker>
-          )}
+          ))}
 
           {currentBus && selectedDestination && (
             <Polyline
