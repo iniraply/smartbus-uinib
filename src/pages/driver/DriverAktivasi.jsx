@@ -1,4 +1,4 @@
-// src/pages/driver/DriverAktivasi.jsx (UPGRADED MAP)
+// src/pages/driver/DriverAktivasi.jsx (IMMERSIVE UI)
 
 import React, { useState, useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -7,10 +7,18 @@ import axios from "axios";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 // Kita gunakan ikon Font Awesome agar konsisten
-import { FaBus, FaSignal, FaStopCircle, FaArrowLeft } from "react-icons/fa";
+import {
+  FaBus,
+  FaSignal,
+  FaStopCircle,
+  FaArrowLeft,
+  FaUsers,
+  FaUsersSlash,
+} from "react-icons/fa";
+import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import DriverBottomNav from "../../components/DriverBottomNav";
 
-// --- 1. Fix Ikon Leaflet (Sama seperti Penumpang) ---
+// --- 1. Fix Ikon Leaflet ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -19,19 +27,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
 
-// --- 2. Ikon Bus Custom (Sama seperti Penumpang) ---
+// --- 2. Ikon Bus Custom ---
 const createBusIcon = () => {
   const iconMarkup = renderToStaticMarkup(
     <div className="relative flex items-center justify-center w-10 h-10">
-      {/* Lingkaran Background dengan animasi pulse */}
       <div className="absolute w-10 h-10 bg-blue-600 rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
-      {/* Ikon Bus */}
       <FaBus className="relative z-10 text-white w-5 h-5" />
-      {/* Pointer segitiga */}
       <div className="absolute -bottom-1 w-3 h-3 bg-blue-600 rotate-45 border-b-2 border-r-2 border-white"></div>
     </div>
   );
-
   return L.divIcon({
     html: iconMarkup,
     className: "custom-bus-icon",
@@ -46,10 +50,7 @@ function MapUpdater({ position }) {
   const map = useMap();
   useEffect(() => {
     if (position) {
-      map.flyTo(position, 16, {
-        animate: true,
-        duration: 1.5, // Animasi halus saat lokasi berubah
-      });
+      map.flyTo(position, 16, { animate: true, duration: 1.5 });
     }
   }, [position, map]);
   return null;
@@ -58,6 +59,7 @@ function MapUpdater({ position }) {
 function DriverAktivasi() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
+  const [isFull, setIsFull] = useState(false);
   const [position, setPosition] = useState([
     -0.8108711135090128, 100.37100177052656,
   ]); // Default UIN IB
@@ -76,9 +78,14 @@ function DriverAktivasi() {
             headers: { Authorization: `Bearer ${getAuthToken()}` },
           }
         );
-        if (res.data.hasBus && res.data.bus.status_bus === "Aktif") {
-          setIsActive(true);
-          startTracking();
+        if (res.data.hasBus) {
+          if (res.data.bus.status_bus === "Aktif") {
+            setIsActive(true);
+            startTracking();
+          }
+          if (res.data.bus.status_penumpang === "Penuh") {
+            setIsFull(true);
+          }
         }
       } catch (err) {
         console.error("Gagal cek status", err);
@@ -97,11 +104,8 @@ function DriverAktivasi() {
           latitude: lat,
           longitude: lng,
         },
-        {
-          headers: { Authorization: `Bearer ${getAuthToken()}` },
-        }
+        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
       );
-      console.log("Lokasi terkirim:", lat, lng);
     } catch (err) {
       console.error("Gagal kirim lokasi:", err);
     }
@@ -113,7 +117,6 @@ function DriverAktivasi() {
       alert("Browser tidak mendukung Geolocation");
       return;
     }
-    // Update lokasi setiap 5 detik
     locationInterval.current = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -169,17 +172,34 @@ function DriverAktivasi() {
     }
   };
 
+  const handleToggleCapacity = async () => {
+    const newCapacity = !isFull ? "Penuh" : "Tersedia";
+    try {
+      await axios.put(
+        "http://localhost:3001/api/driver-app/capacity",
+        {
+          status_penumpang: newCapacity,
+        },
+        {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        }
+      );
+      setIsFull(!isFull);
+    } catch (err) {
+      alert("Gagal update kapasitas.");
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100 relative">
-      {/* Header */}
-      <header className="flex items-center p-4 bg-white shadow-md z-10 sticky top-0">
-        <button onClick={() => navigate(-1)} className="text-gray-700">
-          <FaArrowLeft className="h-5 w-5" />
+      {/* HEADER BARU: Floating Back Button */}
+      <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-white p-3 rounded-full shadow-lg text-gray-700 pointer-events-auto active:scale-95 transition-transform hover:bg-gray-50"
+        >
+          <ArrowLeftIcon className="h-6 w-6" />
         </button>
-        <h1 className="text-xl font-semibold text-center flex-grow">
-          Aktivasi Bus
-        </h1>
-        <div className="w-6"></div>
       </header>
 
       {/* Peta Full Screen */}
@@ -187,6 +207,7 @@ function DriverAktivasi() {
         <MapContainer
           center={position}
           zoom={16}
+          zoomControl={false} // Hilangkan zoom control default biar bersih
           scrollWheelZoom={true}
           className="h-full w-full"
           style={{ zIndex: 0 }}
@@ -196,13 +217,13 @@ function DriverAktivasi() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Marker Driver dengan Ikon Bus Custom */}
+          {/* Marker Driver */}
           <Marker position={position} icon={createBusIcon()}>
             <Popup className="custom-popup">
               <div className="text-center">
                 <p className="font-bold text-blue-600 text-sm">Lokasi Anda</p>
                 <p className="text-[10px] text-gray-500">
-                  {isActive ? "Sedang Menyiarkan GPS" : "GPS Offline"}
+                  {isActive ? "Live GPS ON" : "Live GPS OFF"}
                 </p>
               </div>
             </Popup>
@@ -211,11 +232,12 @@ function DriverAktivasi() {
           <MapUpdater position={position} />
         </MapContainer>
 
-        {/* Panel Kontrol Status (Overlay Modern) */}
-        <div className="absolute top-4 left-4 right-4 bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl z-[500] border border-gray-100 transition-all duration-300">
-          <div className="flex justify-between items-center">
+        {/* PANEL KONTROL (Disesuaikan posisinya ke top-20 agar tidak ketabrak tombol back) */}
+        <div className="absolute top-20 left-4 right-4 flex flex-col gap-3 z-[500]">
+          {/* 1. Kartu Status GPS */}
+          <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center border border-white/50">
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                 Status Layanan
               </p>
               <div className="flex items-center gap-2 mt-1">
@@ -229,7 +251,7 @@ function DriverAktivasi() {
                     isActive ? "text-green-600" : "text-gray-700"
                   }`}
                 >
-                  {isActive ? "SEDANG AKTIF" : "OFFLINE"}
+                  {isActive ? "ONLINE" : "OFFLINE"}
                 </h2>
               </div>
             </div>
@@ -246,21 +268,48 @@ function DriverAktivasi() {
               {loading ? (
                 <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : isActive ? (
-                <FaStopCircle className="h-7 w-7" />
+                <FaStopCircle className="h-6 w-6" />
               ) : (
-                <FaSignal className="h-7 w-7" />
+                <FaSignal className="h-6 w-6" />
               )}
             </button>
           </div>
 
-          {/* Indikator Text */}
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-xs text-center text-gray-400">
-              {isActive
-                ? "Lokasi Anda sedang dibagikan ke penumpang."
-                : "Tekan tombol sinyal untuk mulai beroperasi."}
-            </p>
-          </div>
+          {/* 2. Kartu Status Kapasitas */}
+          {isActive && (
+            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center animate-fade-in-down border border-white/50">
+              <div>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                  Kapasitas Penumpang
+                </p>
+                <h2
+                  className={`text-sm font-bold ${
+                    isFull ? "text-red-600" : "text-blue-600"
+                  }`}
+                >
+                  {isFull ? "BUS PENUH" : "TERSEDIA"}
+                </h2>
+              </div>
+              <button
+                onClick={handleToggleCapacity}
+                className={`w-auto px-4 h-10 flex items-center justify-center rounded-lg shadow-md transition-all text-xs font-bold gap-2 ${
+                  isFull
+                    ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                }`}
+              >
+                {isFull ? (
+                  <>
+                    <FaUsers className="w-4 h-4" /> Buka
+                  </>
+                ) : (
+                  <>
+                    <FaUsersSlash className="w-4 h-4" /> Penuhkan
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
