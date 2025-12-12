@@ -1,9 +1,6 @@
-// src/pages/penumpang/HomePenumpang.jsx (OPTIMAL & DINAMIS)
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// Menggunakan Font Awesome agar konsisten
 import { FaBus, FaMapMarkerAlt, FaClock, FaRoute } from "react-icons/fa";
 import BottomNav from "../../components/BottomNav";
 
@@ -20,11 +17,9 @@ function HomePenumpang() {
     day: "numeric",
   });
 
-  // --- 1. Ambil Data User & Jadwal ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // A. Ambil Nama User dari LocalStorage
         const userData = JSON.parse(localStorage.getItem("user"));
         if (userData && userData.nama) {
           const name =
@@ -32,7 +27,6 @@ function HomePenumpang() {
           setUserName(name);
         }
 
-        // B. Ambil Jadwal dari Backend
         const token = localStorage.getItem("token");
         const res = await axios.get(
           "http://localhost:3001/api/penumpang/jadwal",
