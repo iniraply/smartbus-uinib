@@ -3,7 +3,7 @@ import axios from "axios";
 
 // 1. Buat instance Axios dengan Base URL dari .env
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
