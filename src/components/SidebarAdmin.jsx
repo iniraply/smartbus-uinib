@@ -15,19 +15,16 @@ const SidebarAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fungsi Logout
-  const handleLogout = () => {
-    if (window.confirm("Yakin ingin keluar?")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      navigate("/");
-    }
+  // --- PERBAIKAN DI SINI ---
+  // Fungsi Logout sekarang hanya mengarahkan ke halaman konfirmasi
+  const handleLogoutClick = () => {
+    navigate("/admin/logout"); // Arahkan ke halaman AdminLogout.jsx
   };
 
-  // Daftar Menu (Agar styling konsisten, kita pakai Array)
+  // Daftar Menu
   const menuItems = [
     {
-      path: "/admin/dashboard",
+      path: "/admin/dashboard", // Pastikan path ini sesuai route di App.jsx
       label: "Dashboard",
       icon: <FaHome />,
     },
@@ -37,12 +34,12 @@ const SidebarAdmin = () => {
       icon: <FaUserTie />,
     },
     {
-      path: "/admin/databus", // Pastikan path ini sesuai route Anda (/admin/bus atau /admin/databus)
+      path: "/admin/databus", // Sesuaikan dengan App.jsx (misal /admin/bus)
       label: "Data Bus",
       icon: <FaBus />,
     },
     {
-      path: "/admin/datapenumpang", // Pastikan path sesuai (/admin/penumpang atau /admin/datapenumpang)
+      path: "/admin/datapenumpang", // Sesuaikan dengan App.jsx (misal /admin/penumpang)
       label: "Data Penumpang",
       icon: <FaUsers />,
     },
@@ -59,7 +56,6 @@ const SidebarAdmin = () => {
   ];
 
   return (
-    // Sidebar Container (Fixed width, full height)
     <aside className="w-64 bg-brand-dark text-brand-cream min-h-screen flex flex-col shadow-2xl z-50 fixed left-0 top-0">
       {/* Header Sidebar */}
       <div className="p-6 border-b border-brand-cream/10 flex items-center gap-3">
@@ -77,7 +73,7 @@ const SidebarAdmin = () => {
       {/* Menu Navigasi */}
       <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item, index) => {
-          // Cek apakah menu ini sedang aktif
+          // Cek aktif (fleksibel jika ada sub-route)
           const isActive = location.pathname.startsWith(item.path);
 
           return (
@@ -86,11 +82,11 @@ const SidebarAdmin = () => {
               to={item.path}
               className={`
                 flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 font-medium
-                min-h-[56px] /* INI KUNCINYA: Memaksa tinggi minimal agar seragam */
+                min-h-[56px]
                 ${
                   isActive
-                    ? "bg-brand-primary text-white shadow-lg translate-x-1" // Style Aktif
-                    : "text-brand-cream/70 hover:bg-brand-primary/20 hover:text-white" // Style Tidak Aktif
+                    ? "bg-brand-primary text-white shadow-lg translate-x-1"
+                    : "text-brand-cream/70 hover:bg-brand-primary/20 hover:text-white"
                 }
               `}
             >
@@ -106,7 +102,7 @@ const SidebarAdmin = () => {
       {/* Footer / Logout */}
       <div className="p-4 border-t border-brand-cream/10">
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutClick} // Panggil fungsi navigasi baru
           className="flex items-center gap-4 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-medium min-h-[56px]"
         >
           <FaSignOutAlt className="text-xl" />

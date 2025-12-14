@@ -78,11 +78,9 @@ const AdminDashboard = () => {
       <main className="flex-grow p-8 ml-64">
         <header className="mb-8 flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-bold text-brand-primary">
-              Control Panel
-            </h1>
+            <h1 className="text-3xl font-bold text-brand-primary">Dashboard</h1>
             <p className="text-brand-dark/70 mt-1">
-              Ringkasan operasional armada hari ini.
+              Ringkasan statistik dan informasi terbaru.
             </p>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm text-sm font-bold text-brand-primary border border-brand-primary/10">
@@ -101,7 +99,7 @@ const AdminDashboard = () => {
             title="Total Bus"
             value={stats.totalBus}
             icon={<FaBus className="text-xl" />}
-            link="/admin/bus"
+            link="/admin/databus"
             colorClass="bg-brand-primary"
             textClass="text-brand-primary"
           />
@@ -117,7 +115,7 @@ const AdminDashboard = () => {
             title="Penumpang"
             value={stats.totalPenumpang}
             icon={<FaUsers className="text-xl" />}
-            link="/admin/penumpang"
+            link="/admin/datapenumpang"
             colorClass="bg-yellow-600"
             textClass="text-yellow-600"
           />

@@ -1,8 +1,10 @@
-// src/pages/admin/AdminDataPenumpang.jsx (TEMA BARU)
+// src/pages/admin/AdminDataPenumpang.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaUser, FaTrash, FaPlus, FaEdit, FaEnvelope } from "react-icons/fa";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminDataPenumpang() {
@@ -25,6 +27,7 @@ function AdminDataPenumpang() {
   const getAuthToken = () => localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
 
+  // --- FETCH DATA ---
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -35,6 +38,7 @@ function AdminDataPenumpang() {
       setPenumpang(res.data);
     } catch (err) {
       console.error(err);
+      toast.error("Gagal memuat data penumpang.");
     } finally {
       setLoading(false);
     }
@@ -44,6 +48,7 @@ function AdminDataPenumpang() {
     fetchData();
   }, []);
 
+  // --- HANDLER TAMBAH ---
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
@@ -52,13 +57,25 @@ function AdminDataPenumpang() {
         newData,
         config
       );
-      alert("Penumpang berhasil ditambahkan!");
+      toast.success("Penumpang berhasil ditambahkan! 🎉");
       setShowAddModal(false);
       setNewData({ nama: "", email: "", password: "" });
       fetchData();
     } catch (err) {
-      alert("Gagal tambah penumpang");
+      const pesan = err.response?.data?.message || "Gagal tambah penumpang";
+      toast.error(pesan);
     }
+  };
+
+  // --- HANDLER EDIT ---
+  const openEdit = (p) => {
+    setEditData({
+      id: p.id_user || p.id, // Handle id consistency
+      nama: p.nama,
+      email: p.email,
+      password: "",
+    });
+    setShowEditModal(true);
   };
 
   const handleUpdate = async (e) => {
@@ -69,36 +86,90 @@ function AdminDataPenumpang() {
         editData,
         config
       );
-      alert("Penumpang berhasil diupdate!");
+      toast.success("Data penumpang diperbarui! ✅");
       setShowEditModal(false);
       fetchData();
     } catch (err) {
-      alert("Gagal update penumpang");
+      const pesan = err.response?.data?.message || "Gagal update penumpang";
+      toast.error(pesan);
     }
   };
 
+  // --- HANDLER DELETE (SWEETALERT PRO) ---
   const handleDelete = async (id) => {
-    if (window.confirm("Yakin hapus penumpang ini?")) {
+    const result = await Swal.fire({
+      title: "Hapus Penumpang ini?",
+      text: "Data yang dihapus tidak bisa dikembalikan!",
+      icon: "warning",
+      showCancelButton: true,
+
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      buttonsStyling: false,
+
+      customClass: {
+        // Container & Popup (Blur + Estetik)
+        container: "backdrop-blur-sm bg-black/30",
+        popup:
+          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+        title: "text-brand-primary font-bold text-2xl",
+        htmlContainer: "text-brand-dark/80",
+
+        // Tombol Konfirmasi (Tanpa animasi naik)
+        confirmButton:
+          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+        // Tombol Batal
+        cancelButton:
+          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+      },
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(
           `http://localhost:3001/api/admin/penumpang/${id}`,
           config
         );
+
+        Swal.fire({
+          title: "Terhapus!",
+          text: "Data penumpang berhasil dihapus.",
+          icon: "success",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            title: "text-brand-primary font-bold",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+          },
+        });
+
         fetchData();
       } catch (err) {
-        alert("Gagal hapus");
+        const pesan =
+          err.response?.data?.message || "Gagal menghapus penumpang";
+        Swal.fire({
+          title: "Gagal!",
+          text: pesan,
+          icon: "error",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+          },
+        });
       }
     }
-  };
-
-  const openEdit = (p) => {
-    setEditData({ id: p.id_user, nama: p.nama, email: p.email, password: "" });
-    setShowEditModal(true);
   };
 
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
+
+      {/* PENTING: ml-64 agar tidak tertutup sidebar */}
       <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-brand-primary">
@@ -112,6 +183,7 @@ function AdminDataPenumpang() {
           </button>
         </div>
 
+        {/* TABEL PENUMPANG */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
           <table className="w-full text-left border-collapse">
             <thead className="bg-brand-primary text-brand-cream">
@@ -128,10 +200,19 @@ function AdminDataPenumpang() {
                     Loading...
                   </td>
                 </tr>
+              ) : penumpang.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="3"
+                    className="p-8 text-center text-gray-400 italic"
+                  >
+                    Belum ada data penumpang.
+                  </td>
+                </tr>
               ) : (
                 penumpang.map((p) => (
                   <tr
-                    key={p.id_user}
+                    key={p.id_user || p.id}
                     className="hover:bg-brand-cream/30 transition-colors"
                   >
                     <td className="p-4 font-bold flex items-center gap-3">
@@ -150,12 +231,14 @@ function AdminDataPenumpang() {
                       <button
                         onClick={() => openEdit(p)}
                         className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                        title="Edit"
                       >
                         <FaEdit />
                       </button>
                       <button
-                        onClick={() => handleDelete(p.id_user)}
+                        onClick={() => handleDelete(p.id_user || p.id)}
                         className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                        title="Hapus"
                       >
                         <FaTrash />
                       </button>
@@ -178,7 +261,7 @@ function AdminDataPenumpang() {
             <form onSubmit={handleAdd} className="space-y-4">
               <input
                 className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
-                placeholder="Nama"
+                placeholder="Nama Lengkap"
                 value={newData.nama}
                 onChange={(e) =>
                   setNewData({ ...newData, nama: e.target.value })
@@ -215,7 +298,7 @@ function AdminDataPenumpang() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-dark"
                 >
                   Simpan
                 </button>
@@ -251,6 +334,7 @@ function AdminDataPenumpang() {
                   Email
                 </label>
                 <input
+                  type="email"
                   className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
                   value={editData.email}
                   onChange={(e) =>
@@ -264,6 +348,7 @@ function AdminDataPenumpang() {
                   Password Baru (Opsional)
                 </label>
                 <input
+                  type="password"
                   className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
                   placeholder="Isi untuk ganti password"
                   value={editData.password}
@@ -282,7 +367,7 @@ function AdminDataPenumpang() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow hover:bg-brand-dark"
                 >
                   Update
                 </button>

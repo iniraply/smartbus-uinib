@@ -1,8 +1,10 @@
-// src/pages/admin/AdminDataBus.jsx (VERSI DEBUGGING & FIX)
+// src/pages/admin/AdminDataBus.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaBus, FaTrash, FaUserTie, FaPlus, FaEdit } from "react-icons/fa";
+import { FaUserTie, FaTrash, FaPlus, FaEdit } from "react-icons/fa";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminDataBus() {
@@ -42,18 +44,15 @@ function AdminDataBus() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const busRes = await axios.get(
-        "http://localhost:3001/api/admin/bus",
-        config
-      );
+      const [busRes, driverRes] = await Promise.all([
+        axios.get("http://localhost:3001/api/admin/bus", config),
+        axios.get("http://localhost:3001/api/admin/drivers-list", config),
+      ]);
       setBusList(busRes.data);
-      const driverRes = await axios.get(
-        "http://localhost:3001/api/admin/drivers-list",
-        config
-      );
       setDriverList(driverRes.data);
     } catch (err) {
-      console.error("Error Fetching Data:", err);
+      console.error(err);
+      toast.error("Gagal memuat data.");
     } finally {
       setLoading(false);
     }
@@ -63,12 +62,12 @@ function AdminDataBus() {
     fetchData();
   }, []);
 
-  // --- HANDLER TAMBAH (DIPERBAIKI) ---
+  // --- HANDLER TAMBAH ---
   const handleAddBus = async (e) => {
     e.preventDefault();
     try {
       await axios.post("http://localhost:3001/api/admin/bus", newBus, config);
-      alert("Bus berhasil ditambahkan!");
+      toast.success("Bus berhasil ditambahkan!");
       setShowAddModal(false);
       setNewBus({
         nama_bus: "",
@@ -78,19 +77,17 @@ function AdminDataBus() {
       });
       fetchData();
     } catch (err) {
-      // TAMPILKAN ERROR ASLI
-      console.error("Error Tambah:", err);
-      const pesan = err.response?.data?.message || err.message;
-      alert(`Gagal menambah bus: ${pesan}`);
+      const pesan = err.response?.data?.message || "Gagal menambah bus";
+      toast.error(pesan);
     }
   };
 
-  // --- HANDLER EDIT (DIPERBAIKI) ---
+  // --- HANDLER EDIT ---
   const openEditModal = (bus) => {
     setEditData({
       id_bus: bus.id_bus,
       nama_bus: bus.nama_bus,
-      plat_nomor: bus.plat_nomor,
+      plat_nomor: bus.plat_nomor || "",
       rute: bus.rute,
       status_bus: bus.status_bus,
     });
@@ -105,14 +102,12 @@ function AdminDataBus() {
         editData,
         config
       );
-      alert("Data bus berhasil diperbarui!");
+      toast.success("Data bus diperbarui!");
       setShowEditModal(false);
       fetchData();
     } catch (err) {
-      // TAMPILKAN ERROR ASLI
-      console.error("Error Edit:", err);
-      const pesan = err.response?.data?.message || err.message;
-      alert(`Gagal update bus: ${pesan}`);
+      const pesan = err.response?.data?.message || "Gagal update bus";
+      toast.error(pesan);
     }
   };
 
@@ -134,24 +129,88 @@ function AdminDataBus() {
         },
         config
       );
-      alert(`Supir berhasil diupdate`);
+      toast.success(`Supir berhasil ditugaskan!`);
       setShowAssignModal(false);
       fetchData();
     } catch (err) {
-      console.error("Error Assign:", err);
-      const pesan = err.response?.data?.message || err.message;
-      alert(`Gagal update supir: ${pesan}`);
+      toast.error("Gagal update supir.");
     }
   };
 
-  // --- HANDLER DELETE ---
+  // --- HANDLER DELETE (VERSI ESTETIK: BLUR + TEMA) ---
   const handleDelete = async (id) => {
-    if (window.confirm("Yakin hapus bus ini?")) {
+    const result = await Swal.fire({
+      title: "Hapus Bus ini?",
+      text: "Data yang dihapus tidak bisa dikembalikan!",
+      icon: "warning",
+      showCancelButton: true,
+
+      // Teks Tombol
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+
+      // MATIKAN Style Bawaan (Wajib!)
+      buttonsStyling: false,
+
+      // Kustomisasi Tampilan dengan Tailwind
+      customClass: {
+        // 1. Container: Memberikan efek Blur di belakang
+        container: "backdrop-blur-sm bg-black/30",
+
+        // 2. Popup: Membuat sudut membulat & border halus sesuai tema
+        popup:
+          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+
+        // 3. Judul: Warna Maroon
+        title: "text-brand-primary font-bold text-2xl",
+
+        // 4. Konten/Teks: Warna gelap
+        htmlContainer: "text-brand-dark/80",
+
+        // 5. Tombol Konfirmasi (Maroon - Sesuai Tema)
+        confirmButton:
+          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+        // 6. Tombol Batal (Abu-abu/Netral)
+        cancelButton:
+          "bg-gray-200 hover:bg-gray-400 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all hover:bg-gray-300",
+      },
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://localhost:3001/api/admin/bus/${id}`, config);
+
+        // Notif Sukses (Juga disesuaikan)
+        Swal.fire({
+          title: "Terhapus!",
+          text: "Data bus berhasil dihapus.",
+          icon: "success",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            title: "text-brand-primary font-bold",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+          },
+        });
+
         fetchData();
       } catch (err) {
-        alert("Gagal hapus bus");
+        // Notif Gagal
+        const pesan = err.response?.data?.message || "Gagal menghapus data";
+        Swal.fire({
+          title: "Gagal!",
+          text: pesan,
+          icon: "error",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+          },
+        });
       }
     }
   };
@@ -191,6 +250,15 @@ function AdminDataBus() {
                     Loading...
                   </td>
                 </tr>
+              ) : busList.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="p-8 text-center text-gray-400 italic"
+                  >
+                    Belum ada data bus.
+                  </td>
+                </tr>
               ) : (
                 busList.map((bus) => (
                   <tr
@@ -199,7 +267,7 @@ function AdminDataBus() {
                   >
                     <td className="p-4 font-bold">{bus.nama_bus}</td>
                     <td className="p-4 font-mono text-sm bg-brand-cream/20 rounded inline-block m-2 px-2 border border-brand-primary/10">
-                      {bus.plat_nomor}
+                      {bus.plat_nomor || "-"}
                     </td>
                     <td className="p-4 text-sm">{bus.rute}</td>
                     <td className="p-4">
@@ -214,7 +282,6 @@ function AdminDataBus() {
                       )}
                     </td>
                     <td className="p-4 text-center flex justify-center gap-2">
-                      {/* Tombol Atur Supir */}
                       <button
                         onClick={() => openAssignModal(bus)}
                         className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
@@ -222,7 +289,6 @@ function AdminDataBus() {
                       >
                         <FaUserTie />
                       </button>
-                      {/* Tombol Edit */}
                       <button
                         onClick={() => openEditModal(bus)}
                         className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
@@ -230,7 +296,6 @@ function AdminDataBus() {
                       >
                         <FaEdit />
                       </button>
-                      {/* Tombol Hapus */}
                       <button
                         onClick={() => handleDelete(bus.id_bus)}
                         className="bg-red-600 hover:bg-red-800 text-white p-2 rounded-lg shadow transition-all"

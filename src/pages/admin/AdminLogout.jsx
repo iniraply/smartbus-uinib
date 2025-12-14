@@ -1,57 +1,79 @@
-import NavbarAdmin from "../../components/NavbarAdmin";
-import SidebarAdmin from "../../components/SidebarAdmin";
-import { useState } from "react";
+// src/pages/admin/AdminLogout.jsx (FIX: WARNA SESUAI TEMA)
+
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import SidebarAdmin from "../../components/SidebarAdmin";
+import { FaSignOutAlt, FaTimes } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 export default function AdminLogout() {
   const navigate = useNavigate();
-  const [showConfirm, setShowConfirm] = useState(true);
 
   const handleLogout = () => {
-    // Hapus data sesi / token login di sini
-    alert("Logout berhasil! (fungsi backend belum dihubungkan)");
-    navigate("/login");
+    // 1. Hapus Sesi
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+
+    // 2. Notifikasi Sukses
+    toast.success("Logout berhasil. Sampai jumpa! 👋", {
+      position: "top-center",
+      autoClose: 2000,
+    });
+
+    // 3. Redirect ke Login Admin
+    navigate("/login/admin");
   };
 
   const handleCancel = () => {
-    navigate("/admin/dashboard");
+    navigate("/admin/dashboard"); // Kembali ke dashboard
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <NavbarAdmin />
-      <div className="flex flex-1">
-        <SidebarAdmin />
+    // Layout Konsisten dengan Halaman Admin Lain
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
+      <SidebarAdmin />
 
-        {/* Konten utama */}
-        <main className="flex-1 bg-brand-cream relative flex items-center justify-center">
-          {/* Background blur jika popup muncul */}
-          {showConfirm && (
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-10">
-              <div className="bg-white p-8 rounded-lg shadow-lg w-[350px] text-center border">
-                <h2 className="text-lg font-semibold text-brand-dark mb-4">
-                  Konfirmasi Logout
-                </h2>
-                <p className="text-gray-600 mb-6">Anda yakin ingin Logout?</p>
-                <div className="flex justify-center space-x-6">
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-700 text-white px-6 py-2 rounded-md hover:bg-red-800 transition"
-                  >
-                    YA
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="bg-gray-300 text-brand-dark px-6 py-2 rounded-md hover:bg-gray-400 transition"
-                  >
-                    TIDAK
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
+      {/* Konten Utama (Tengah Layar) */}
+      <main className="flex-grow ml-64 flex items-center justify-center p-8">
+        {/* Kartu Konfirmasi */}
+        <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center border-2 border-brand-primary/10 animate-fade-in-down relative overflow-hidden">
+          {/* Hiasan Background (Lingkaran Pudar) */}
+          <div className="absolute top-0 left-0 w-full h-2 bg-brand-primary"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand-primary/5 rounded-full blur-xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-accent/5 rounded-full blur-xl"></div>
+
+          {/* Ikon Besar (Maroon Pudar) */}
+          <div className="bg-brand-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <FaSignOutAlt className="text-4xl text-brand-primary ml-1" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-brand-primary mb-2">
+            Konfirmasi Logout
+          </h2>
+          <p className="text-brand-dark/60 mb-8 leading-relaxed">
+            Apakah Anda yakin ingin mengakhiri sesi dan keluar dari sistem?
+          </p>
+
+          {/* Tombol Aksi */}
+          <div className="flex flex-col gap-3">
+            {/* TOMBOL UTAMA: MAROON (Sesuai Tema) */}
+            <button
+              onClick={handleLogout}
+              className="w-full bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+            >
+              Ya, Keluar Sekarang
+            </button>
+
+            {/* TOMBOL BATAL: Abu-abu Netral */}
+            <button
+              onClick={handleCancel}
+              className="w-full bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

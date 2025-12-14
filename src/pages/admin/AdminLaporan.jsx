@@ -1,13 +1,15 @@
-// src/pages/admin/AdminLaporan.jsx (TEMA BARU)
+// src/pages/admin/AdminLaporan.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaTrash, FaEnvelope, FaClipboardList } from "react-icons/fa"; // Menggunakan React Icons agar seragam dengan halaman lain
+import { FaTrash, FaEnvelope, FaClipboardList } from "react-icons/fa";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminLaporan() {
   const [laporanList, setLaporanList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const getAuthToken = () => localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
@@ -15,7 +17,6 @@ function AdminLaporan() {
   // --- 1. FUNGSI READ (GET ALL LAPORAN) ---
   const fetchLaporan = async () => {
     setLoading(true);
-    setError("");
     try {
       const res = await axios.get(
         "http://localhost:3001/api/admin/laporan",
@@ -23,10 +24,9 @@ function AdminLaporan() {
       );
       setLaporanList(res.data);
     } catch (err) {
-      setError(
-        "Gagal mengambil data laporan. " +
-          (err.response?.data?.message || err.message)
-      );
+      const pesan = err.response?.data?.message || err.message;
+      console.error(err);
+      toast.error("Gagal mengambil data laporan: " + pesan);
     } finally {
       setLoading(false);
     }
@@ -36,19 +36,71 @@ function AdminLaporan() {
     fetchLaporan();
   }, []);
 
-  // --- 2. FUNGSI DELETE (HAPUS LAPORAN) ---
+  // --- 2. FUNGSI DELETE (SWEETALERT PRO) ---
   const handleDelete = async (id) => {
-    if (window.confirm("Anda yakin ingin menghapus laporan ini?")) {
-      setError("");
+    const result = await Swal.fire({
+      title: "Hapus Laporan ini?",
+      text: "Data yang dihapus tidak bisa dikembalikan!",
+      icon: "warning",
+      showCancelButton: true,
+
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      buttonsStyling: false,
+
+      customClass: {
+        // Container & Popup (Blur + Estetik)
+        container: "backdrop-blur-sm bg-black/30",
+        popup:
+          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+        title: "text-brand-primary font-bold text-2xl",
+        htmlContainer: "text-brand-dark/80",
+
+        // Tombol Konfirmasi (Tanpa animasi naik)
+        confirmButton:
+          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+        // Tombol Batal
+        cancelButton:
+          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+      },
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(
           `http://localhost:3001/api/admin/laporan/${id}`,
           config
         );
-        alert("Laporan berhasil dihapus.");
+
+        Swal.fire({
+          title: "Terhapus!",
+          text: "Laporan berhasil dihapus.",
+          icon: "success",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            title: "text-brand-primary font-bold",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+          },
+        });
+
         fetchLaporan(); // Muat ulang daftar laporan
       } catch (err) {
-        setError(err.response?.data?.message || "Gagal menghapus laporan.");
+        const pesan = err.response?.data?.message || "Gagal menghapus laporan.";
+        Swal.fire({
+          title: "Gagal!",
+          text: pesan,
+          icon: "error",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+          },
+        });
       }
     }
   };
@@ -85,9 +137,6 @@ function AdminLaporan() {
 
         {loading && (
           <p className="text-center text-brand-dark/60">Loading...</p>
-        )}
-        {error && (
-          <p className="text-center text-red-600 font-bold mb-4">{error}</p>
         )}
 
         {/* 3. KONTAINER TABEL PUTIH */}

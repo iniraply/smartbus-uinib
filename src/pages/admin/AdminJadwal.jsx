@@ -1,4 +1,4 @@
-// src/pages/admin/AdminJadwal.jsx (TEMA BARU)
+// src/pages/admin/AdminJadwal.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -10,6 +10,8 @@ import {
   FaClock,
   FaBus,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminJadwal() {
@@ -37,21 +39,17 @@ function AdminJadwal() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Ambil Data Jadwal
-      const resJadwal = await axios.get(
-        "http://localhost:3001/api/admin/jadwal",
-        config
-      );
-      setJadwalList(resJadwal.data);
+      // Ambil Data Jadwal & Bus secara paralel
+      const [resJadwal, resBus] = await Promise.all([
+        axios.get("http://localhost:3001/api/admin/jadwal", config),
+        axios.get("http://localhost:3001/api/admin/bus", config),
+      ]);
 
-      // Ambil Data Bus (untuk dropdown)
-      const resBus = await axios.get(
-        "http://localhost:3001/api/admin/bus",
-        config
-      );
+      setJadwalList(resJadwal.data);
       setBusList(resBus.data);
     } catch (err) {
       console.error(err);
+      toast.error("Gagal memuat data jadwal.");
     } finally {
       setLoading(false);
     }
@@ -61,7 +59,7 @@ function AdminJadwal() {
     fetchData();
   }, []);
 
-  // --- HANDLERS ---
+  // --- HANDLER TAMBAH ---
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
@@ -70,47 +68,17 @@ function AdminJadwal() {
         newData,
         config
       );
-      alert("Jadwal berhasil ditambahkan!");
+      toast.success("Jadwal berhasil ditambahkan! 📅");
       setShowAddModal(false);
       setNewData({ id_bus: "", waktu: "", tujuan: "" });
       fetchData();
     } catch (err) {
-      const msg = err.response?.data?.message || err.message;
-      alert(`Gagal tambah jadwal: ${msg}`);
+      const msg = err.response?.data?.message || "Gagal tambah jadwal";
+      toast.error(msg);
     }
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://localhost:3001/api/admin/jadwal/${editData.id_jadwal}`,
-        editData,
-        config
-      );
-      alert("Jadwal berhasil diperbarui!");
-      setShowEditModal(false);
-      fetchData();
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message;
-      alert(`Gagal update jadwal: ${msg}`);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Yakin hapus jadwal ini?")) {
-      try {
-        await axios.delete(
-          `http://localhost:3001/api/admin/jadwal/${id}`,
-          config
-        );
-        fetchData();
-      } catch (err) {
-        alert("Gagal hapus jadwal");
-      }
-    }
-  };
-
+  // --- HANDLER EDIT ---
   const openEdit = (item) => {
     setEditData({
       id_jadwal: item.id_jadwal,
@@ -121,9 +89,96 @@ function AdminJadwal() {
     setShowEditModal(true);
   };
 
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/jadwal/${editData.id_jadwal}`,
+        editData,
+        config
+      );
+      toast.success("Jadwal berhasil diperbarui! ✅");
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Gagal update jadwal";
+      toast.error(msg);
+    }
+  };
+
+  // --- HANDLER DELETE (SWEETALERT PRO) ---
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Hapus Jadwal ini?",
+      text: "Data yang dihapus tidak bisa dikembalikan!",
+      icon: "warning",
+      showCancelButton: true,
+
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      buttonsStyling: false,
+
+      customClass: {
+        // Container & Popup (Blur + Estetik)
+        container: "backdrop-blur-sm bg-black/30",
+        popup:
+          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+        title: "text-brand-primary font-bold text-2xl",
+        htmlContainer: "text-brand-dark/80",
+
+        // Tombol Konfirmasi (Tanpa animasi naik)
+        confirmButton:
+          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+        // Tombol Batal
+        cancelButton:
+          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(
+          `http://localhost:3001/api/admin/jadwal/${id}`,
+          config
+        );
+
+        Swal.fire({
+          title: "Terhapus!",
+          text: "Jadwal berhasil dihapus.",
+          icon: "success",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            title: "text-brand-primary font-bold",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+          },
+        });
+
+        fetchData();
+      } catch (err) {
+        Swal.fire({
+          title: "Gagal!",
+          text: "Gagal menghapus jadwal.",
+          icon: "error",
+          buttonsStyling: false,
+          customClass: {
+            popup: "rounded-2xl shadow-2xl font-sans",
+            confirmButton:
+              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+          },
+        });
+      }
+    }
+  };
+
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
+
+      {/* PENTING: ml-64 agar tidak tertutup sidebar */}
       <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-brand-primary">
@@ -137,6 +192,7 @@ function AdminJadwal() {
           </button>
         </div>
 
+        {/* TABEL JADWAL */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
           <table className="w-full text-left border-collapse">
             <thead className="bg-brand-primary text-brand-cream">
@@ -158,7 +214,7 @@ function AdminJadwal() {
                 <tr>
                   <td
                     colSpan="4"
-                    className="p-4 text-center italic text-gray-500"
+                    className="p-8 text-center text-gray-400 italic"
                   >
                     Belum ada jadwal.
                   </td>
@@ -183,12 +239,14 @@ function AdminJadwal() {
                       <button
                         onClick={() => openEdit(item)}
                         className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                        title="Edit"
                       >
                         <FaEdit />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id_jadwal)}
                         className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                        title="Hapus"
                       >
                         <FaTrash />
                       </button>
@@ -267,7 +325,7 @@ function AdminJadwal() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-dark"
                 >
                   Simpan
                 </button>
@@ -342,7 +400,7 @@ function AdminJadwal() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow hover:bg-brand-dark"
                 >
                   Update
                 </button>
