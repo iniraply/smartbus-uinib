@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import RoleLogin from "./components/RoleLogin";
 import LoginDriver from "./pages/LoginDriver";
 import LoginPenumpang from "./pages/LoginPenumpang";
@@ -26,6 +28,19 @@ import PrivateRoute from "./components/PrivateRoute";
 function App() {
   return (
     <Router>
+      {/* 2. PASANG WADAHNYA DISINI (Di atas Routes atau di bawahnya, asal di dalam Router) */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored" // Pilihan: "light", "dark", "colored"
+      />
       <Routes>
         {/* --- HALAMAN PUBLIK (Bisa diakses siapa saja) --- */}
         <Route path="/" element={<RoleLogin />} />
