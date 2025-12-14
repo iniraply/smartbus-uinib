@@ -30,8 +30,8 @@ L.Icon.Default.mergeOptions({
 // Ubah fungsi ini agar menerima status
 const createBusIcon = (isFull) => {
   // Warna: Merah jika penuh, Biru jika tersedia
-  const colorClass = isFull ? "bg-red-600" : "bg-blue-600";
-  const pointerClass = isFull ? "bg-red-600" : "bg-blue-600";
+  const colorClass = isFull ? "bg-red-600" : "bg-brand-accent";
+  const pointerClass = isFull ? "bg-red-600" : "bg-brand-accent";
 
   const iconMarkup = renderToStaticMarkup(
     <div className="relative flex items-center justify-center w-10 h-10">
@@ -56,7 +56,7 @@ const createBusIcon = (isFull) => {
 const createUserIcon = () => {
   const iconMarkup = renderToStaticMarkup(
     <div className="relative flex items-center justify-center">
-      <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md z-20"></div>
+      <div className="w-4 h-4 bg-brand-accent rounded-full border-2 border-white shadow-md z-20"></div>
       <div className="absolute w-12 h-12 bg-blue-400 rounded-full opacity-30 animate-ping"></div>
     </div>
   );
@@ -231,7 +231,7 @@ function PenumpangLacak() {
   );
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100 relative">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream relative">
       {/* Header Minimalis */}
       <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
         {/* Tombol Back (Pointer events auto agar bisa diklik) */}
@@ -277,7 +277,7 @@ function PenumpangLacak() {
             >
               <Popup className="custom-popup">
                 <div className="text-center">
-                  <h3 className="font-bold text-blue-600 text-sm">
+                  <h3 className="font-bold text-brand-accent text-sm">
                     {bus.nama_bus}
                   </h3>
                   <p className="text-xs font-medium">{bus.rute}</p>
@@ -341,17 +341,17 @@ function PenumpangLacak() {
             {/* Header Selector */}
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full p-4 flex items-center justify-between bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              className="w-full p-4 flex items-center justify-between bg-white hover:bg-gray-50 active:bg-brand-cream transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <FaBus className="text-blue-600 w-4 h-4" />
+                <div className="bg-brand-primary/10 p-2 rounded-full">
+                  <FaBus className="text-brand-accent w-4 h-4" />
                 </div>
                 <div className="text-left">
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
                     Pilih Armada
                   </p>
-                  <p className="text-sm font-bold text-gray-800 truncate">
+                  <p className="text-sm font-bold text-brand-dark truncate">
                     {currentBus
                       ? `${currentBus.nama_bus} (${currentBus.rute})`
                       : "Ketuk untuk memilih bus"}
@@ -377,7 +377,7 @@ function PenumpangLacak() {
                     <button
                       key={bus.id_bus}
                       onClick={() => handleBusSelect(bus.id_bus)}
-                      className="w-full p-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                      className="w-full p-3 flex items-center gap-3 hover:bg-white transition-colors text-left border-b border-gray-50 last:border-0"
                     >
                       <FaCircle className="text-green-500 w-2 h-2 ml-2" />
                       <div>
@@ -399,10 +399,12 @@ function PenumpangLacak() {
           <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
             <div className="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl animate-bounce-in text-center">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-800">Mau Kemana?</h3>
+                <h3 className="text-xl font-bold text-brand-dark">
+                  Mau Kemana?
+                </h3>
                 <button
                   onClick={() => setShowDestinationModal(false)}
-                  className="p-1 bg-gray-100 rounded-full"
+                  className="p-1 bg-brand-cream rounded-full"
                 >
                   <XMarkIcon className="h-6 w-6 text-gray-500" />
                 </button>
@@ -410,16 +412,16 @@ function PenumpangLacak() {
 
               {/* Info Jarak ke User */}
               {etaToUser && (
-                <div className="mb-6 bg-blue-50 p-4 rounded-2xl border border-blue-100 text-left flex items-center gap-4">
-                  <div className="bg-blue-500 p-3 rounded-full text-white">
+                <div className="mb-6 bg-white p-4 rounded-2xl border hover:bg-brand-dark text-left flex items-center gap-4">
+                  <div className="bg-brand-accent p-3 rounded-full text-white">
                     <FaBus />
                   </div>
                   <div>
-                    <p className="text-xs text-blue-600 font-bold uppercase">
+                    <p className="text-xs text-brand-accent font-bold uppercase">
                       Jarak Bus ke Anda
                     </p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-bold text-gray-800">
+                      <span className="text-xl font-bold text-brand-dark">
                         {etaToUser.minutes}
                       </span>
                       <span className="text-sm text-gray-600">
@@ -433,23 +435,23 @@ function PenumpangLacak() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => handleDestinationSelect("Kampus 2")}
-                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-brand-accent0 hover:bg-white transition-all group"
                 >
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
-                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-blue-600" />
+                  <div className="w-10 h-10 bg-brand-cream rounded-full flex items-center justify-center mb-2 group-hover:bg-brand-dark transition-colors">
+                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-brand-accent" />
                   </div>
-                  <span className="font-bold text-gray-700 group-hover:text-blue-700">
+                  <span className="font-bold text-gray-700 group-hover:text-brand-accent">
                     Kampus 2
                   </span>
                 </button>
                 <button
                   onClick={() => handleDestinationSelect("Kampus 3")}
-                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  className="flex flex-col items-center justify-center p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-brand-accent0 hover:bg-white transition-all group"
                 >
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
-                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-blue-600" />
+                  <div className="w-10 h-10 bg-brand-cream rounded-full flex items-center justify-center mb-2 group-hover:bg-brand-dark transition-colors">
+                    <FaMapMarkerAlt className="text-gray-500 group-hover:text-brand-accent" />
                   </div>
-                  <span className="font-bold text-gray-700 group-hover:text-blue-700">
+                  <span className="font-bold text-gray-700 group-hover:text-brand-accent">
                     Kampus 3
                   </span>
                 </button>
@@ -476,10 +478,10 @@ function PenumpangLacak() {
 
             <div className="p-5 flex justify-between items-center">
               <div>
-                <h4 className="font-bold text-xl text-gray-800">
+                <h4 className="font-bold text-xl text-brand-dark">
                   {currentBus.nama_bus}
                 </h4>
-                <p className="text-xs text-gray-500 mt-1 bg-gray-100 px-2 py-1 rounded inline-block">
+                <p className="text-xs text-gray-500 mt-1 bg-brand-cream px-2 py-1 rounded inline-block">
                   {currentBus.rute}
                 </p>
               </div>
@@ -487,7 +489,7 @@ function PenumpangLacak() {
                 <p className="text-xs text-gray-400 font-semibold uppercase">
                   Estimasi Tiba
                 </p>
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-3xl font-bold text-brand-accent">
                   {etaDestination}
                   <span className="text-sm text-gray-500 font-medium ml-1">
                     mnt

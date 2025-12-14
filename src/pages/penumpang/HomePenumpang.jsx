@@ -48,18 +48,18 @@ function HomePenumpang() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream">
       {/* Konten Utama */}
       <main className="flex-grow overflow-y-auto pb-20 p-4 space-y-5 pt-8">
         {/* Kartu 1: Selamat Datang */}
-        <div className="bg-white shadow-md rounded-2xl p-6 text-center border border-blue-50">
-          <div className="bg-blue-50 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3">
-            <FaBus className="h-8 w-8 text-blue-600" />
+        <div className="bg-white shadow-md rounded-2xl p-6 text-center border border-brand-accent">
+          <div className="bg-white w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3">
+            <FaBus className="h-8 w-8 text-brand-accent" />
           </div>
-          <h1 className="text-xl font-bold text-gray-800">SmartBus UIN IB</h1>
+          <h1 className="text-xl font-bold text-brand-dark">SmartBus UIN IB</h1>
           <p className="text-gray-500 mt-1 text-sm">
             Halo{" "}
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-brand-accent">
               {userName || "Penumpang"}
             </span>
             , mau kemana hari ini?
@@ -67,10 +67,12 @@ function HomePenumpang() {
         </div>
 
         {/* Kartu 2: Jadwal Hari Ini (Dinamis) */}
-        <div className="bg-white shadow-md rounded-2xl p-5 border-l-4 border-blue-600">
+        <div className="bg-white shadow-md rounded-2xl p-5 border-l-4 border-brand-accent">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-bold text-lg text-gray-800">Jadwal Hari Ini</h2>
-            <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500">
+            <h2 className="font-bold text-lg text-brand-dark">
+              Jadwal Hari Ini
+            </h2>
+            <span className="text-[10px] bg-brand-cream px-2 py-1 rounded text-gray-500">
               {today}
             </span>
           </div>
@@ -80,8 +82,8 @@ function HomePenumpang() {
             {loading ? (
               // Skeleton Loading
               <>
-                <div className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
-                <div className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                <div className="h-12 bg-brand-cream rounded-lg animate-pulse"></div>
+                <div className="h-12 bg-brand-cream rounded-lg animate-pulse"></div>
               </>
             ) : todaysSchedule.length > 0 ? (
               todaysSchedule.map((item, idx) => (
@@ -90,9 +92,9 @@ function HomePenumpang() {
                   className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <FaClock className="text-blue-500" />
+                    <FaClock className="text-brand-accent" />
                     <div>
-                      <p className="font-bold text-gray-800 text-sm">
+                      <p className="font-bold text-brand-dark text-sm">
                         {item.waktu.substring(0, 5)} WIB
                       </p>
                       <p className="text-xs text-gray-500">{item.nama_bus}</p>
@@ -117,7 +119,7 @@ function HomePenumpang() {
 
           <button
             onClick={() => navigate("/penumpang/jadwal")}
-            className="w-full bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm hover:bg-blue-700 transition-all text-sm"
+            className="w-full bg-brand-accent text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm hover:bg-brand-dark transition-all text-sm"
           >
             Lihat Jadwal Lengkap
           </button>
@@ -145,7 +147,7 @@ function HomePenumpang() {
               <FaMapMarkerAlt className="h-6 w-6 text-red-500 animate-bounce" />
             </div>
             <div className="absolute top-12 right-1/3">
-              <FaBus className="h-6 w-6 text-blue-600" />
+              <FaBus className="h-6 w-6 text-brand-accent" />
             </div>
 
             <div className="absolute inset-0 flex items-center justify-center">
@@ -158,10 +160,9 @@ function HomePenumpang() {
           <div className="p-4">
             <button
               onClick={() => navigate("/penumpang/lacak")}
-              className="w-full bg-gray-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:bg-gray-900 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-brand-accent text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg hover:bg-brand-dark transition-all flex items-center justify-center gap-2"
             >
-              <FaMapMarkerAlt />
-              Lacak Posisi Bus Sekarang
+              Lacak Posisi Bus
             </button>
           </div>
         </div>
