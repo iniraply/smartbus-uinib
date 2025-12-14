@@ -1,7 +1,7 @@
 // src/pages/admin/AdminDataDriver.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaUserTie, FaTrash, FaPlus, FaEdit, FaEnvelope } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -30,145 +30,130 @@ function AdminDataDriver() {
   const [loading, setLoading] = useState(false);
 
   const getAuthToken = () => localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+  const config = {};
+}
 
-  // --- FETCH DATA ---
-  const fetchDrivers = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        "http://192.168.100.17:3001/api/admin/drivers",
-        config
-      );
-      setDrivers(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal memuat data driver.");
-    } finally {
-      setLoading(false);
-    }
-  };
+// --- FETCH DATA ---
+const fetchDrivers = async () => {
+  setLoading(true);
+  try {
+    const res = await api.get("/api/admin/drivers", config);
+    setDrivers(res.data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Gagal memuat data driver.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+  fetchDrivers();
+}, []);
+
+// --- HANDLER TAMBAH ---
+const handleAddDriver = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post("/api/admin/drivers", newDriver, config);
+    toast.success("Driver berhasil ditambahkan!");
+    setShowAddModal(false);
+    setNewDriver({ nama: "", email: "", password: "" });
     fetchDrivers();
-  }, []);
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal tambah driver";
+    toast.error(pesan);
+  }
+};
 
-  // --- HANDLER TAMBAH ---
-  const handleAddDriver = async (e) => {
-    e.preventDefault();
+// --- HANDLER EDIT ---
+const openEditModal = (driver) => {
+  // Mapping id_user ke id
+  setEditData({
+    id: driver.id_user || driver.id,
+    nama: driver.nama,
+    email: driver.email,
+    password: "", // Kosongkan password saat edit
+  });
+  setShowEditModal(true);
+};
+
+const handleUpdateDriver = async (e) => {
+  e.preventDefault();
+  try {
+    await api.put(`/api/admin/drivers/${editData.id}`, editData, config);
+    toast.success("Data driver diperbarui!");
+    setShowEditModal(false);
+    fetchDrivers();
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal update driver";
+    toast.error(pesan);
+  }
+};
+
+// --- HANDLER DELETE (SWEETALERT PRO) ---
+const handleDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Hapus Driver ini?",
+    text: "Data yang dihapus tidak bisa dikembalikan!",
+    icon: "warning",
+    showCancelButton: true,
+
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    reverseButtons: true,
+    buttonsStyling: false,
+
+    customClass: {
+      // Container & Popup (Blur + Estetik)
+      container: "backdrop-blur-sm bg-black/30",
+      popup: "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+      title: "text-brand-primary font-bold text-2xl",
+      htmlContainer: "text-brand-dark/80",
+
+      // Tombol Konfirmasi (Tanpa animasi naik/jump)
+      confirmButton:
+        "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+      // Tombol Batal
+      cancelButton:
+        "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+    },
+  });
+
+  if (result.isConfirmed) {
     try {
-      await axios.post(
-        "http://192.168.100.17:3001/api/admin/drivers",
-        newDriver,
-        config
-      );
-      toast.success("Driver berhasil ditambahkan!");
-      setShowAddModal(false);
-      setNewDriver({ nama: "", email: "", password: "" });
+      await api.delete(`/api/admin/drivers/${id}`, config);
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data driver berhasil dihapus.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          title: "text-brand-primary font-bold",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+        },
+      });
+
       fetchDrivers();
     } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal tambah driver";
-      toast.error(pesan);
+      const pesan = err.response?.data?.message || "Gagal menghapus driver";
+      Swal.fire({
+        title: "Gagal!",
+        text: pesan,
+        icon: "error",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+        },
+      });
     }
-  };
-
-  // --- HANDLER EDIT ---
-  const openEditModal = (driver) => {
-    // Mapping id_user ke id
-    setEditData({
-      id: driver.id_user || driver.id,
-      nama: driver.nama,
-      email: driver.email,
-      password: "", // Kosongkan password saat edit
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdateDriver = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://192.168.100.17:3001/api/admin/drivers/${editData.id}`,
-        editData,
-        config
-      );
-      toast.success("Data driver diperbarui!");
-      setShowEditModal(false);
-      fetchDrivers();
-    } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal update driver";
-      toast.error(pesan);
-    }
-  };
-
-  // --- HANDLER DELETE (SWEETALERT PRO) ---
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Hapus Driver ini?",
-      text: "Data yang dihapus tidak bisa dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-      buttonsStyling: false,
-
-      customClass: {
-        // Container & Popup (Blur + Estetik)
-        container: "backdrop-blur-sm bg-black/30",
-        popup:
-          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
-        title: "text-brand-primary font-bold text-2xl",
-        htmlContainer: "text-brand-dark/80",
-
-        // Tombol Konfirmasi (Tanpa animasi naik/jump)
-        confirmButton:
-          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
-
-        // Tombol Batal
-        cancelButton:
-          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
-      },
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(
-          `http://192.168.100.17:3001/api/admin/drivers/${id}`,
-          config
-        );
-
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Data driver berhasil dihapus.",
-          icon: "success",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            title: "text-brand-primary font-bold",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
-          },
-        });
-
-        fetchDrivers();
-      } catch (err) {
-        const pesan = err.response?.data?.message || "Gagal menghapus driver";
-        Swal.fire({
-          title: "Gagal!",
-          text: pesan,
-          icon: "error",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
-          },
-        });
-      }
-    }
-  };
+  }
 
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
@@ -387,6 +372,6 @@ function AdminDataDriver() {
       )}
     </div>
   );
-}
+};
 
 export default AdminDataDriver;

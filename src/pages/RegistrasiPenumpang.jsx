@@ -1,7 +1,7 @@
 // src/pages/RegistrasiPenumpang.jsx (FINAL CLEAN + TOASTIFY)
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
@@ -39,10 +39,7 @@ function RegistrasiPenumpang() {
     try {
       const body = { username, email, password };
       // Pastikan endpoint backend Anda benar
-      await axios.post(
-        "http://192.168.100.17:3001/api/auth/register/penumpang",
-        body
-      );
+      await api.post("/api/auth/register/penumpang", body);
 
       setLoading(false);
 

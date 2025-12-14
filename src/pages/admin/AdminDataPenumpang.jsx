@@ -1,7 +1,7 @@
 // src/pages/admin/AdminDataPenumpang.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaUser, FaTrash, FaPlus, FaEdit, FaEnvelope } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -25,145 +25,129 @@ function AdminDataPenumpang() {
 
   const [loading, setLoading] = useState(false);
   const getAuthToken = () => localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+  const config = {};
+}
 
-  // --- FETCH DATA ---
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        "http://192.168.100.17:3001/api/admin/penumpang",
-        config
-      );
-      setPenumpang(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal memuat data penumpang.");
-    } finally {
-      setLoading(false);
-    }
-  };
+// --- FETCH DATA ---
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    const res = await api.get("/api/admin/penumpang", config);
+    setPenumpang(res.data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Gagal memuat data penumpang.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+  fetchData();
+}, []);
+
+// --- HANDLER TAMBAH ---
+const handleAdd = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post("/api/admin/penumpang", newData, config);
+    toast.success("Penumpang berhasil ditambahkan!");
+    setShowAddModal(false);
+    setNewData({ nama: "", email: "", password: "" });
     fetchData();
-  }, []);
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal tambah penumpang";
+    toast.error(pesan);
+  }
+};
 
-  // --- HANDLER TAMBAH ---
-  const handleAdd = async (e) => {
-    e.preventDefault();
+// --- HANDLER EDIT ---
+const openEdit = (p) => {
+  setEditData({
+    id: p.id_user || p.id, // Handle id consistency
+    nama: p.nama,
+    email: p.email,
+    password: "",
+  });
+  setShowEditModal(true);
+};
+
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    await api.put(`/api/admin/penumpang/${editData.id}`, editData, config);
+    toast.success("Data penumpang diperbarui!");
+    setShowEditModal(false);
+    fetchData();
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal update penumpang";
+    toast.error(pesan);
+  }
+};
+
+// --- HANDLER DELETE (SWEETALERT PRO) ---
+const handleDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Hapus Penumpang ini?",
+    text: "Data yang dihapus tidak bisa dikembalikan!",
+    icon: "warning",
+    showCancelButton: true,
+
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    reverseButtons: true,
+    buttonsStyling: false,
+
+    customClass: {
+      // Container & Popup (Blur + Estetik)
+      container: "backdrop-blur-sm bg-black/30",
+      popup: "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+      title: "text-brand-primary font-bold text-2xl",
+      htmlContainer: "text-brand-dark/80",
+
+      // Tombol Konfirmasi (Tanpa animasi naik)
+      confirmButton:
+        "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+      // Tombol Batal
+      cancelButton:
+        "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+    },
+  });
+
+  if (result.isConfirmed) {
     try {
-      await axios.post(
-        "http://192.168.100.17:3001/api/admin/penumpang",
-        newData,
-        config
-      );
-      toast.success("Penumpang berhasil ditambahkan!");
-      setShowAddModal(false);
-      setNewData({ nama: "", email: "", password: "" });
+      await api.delete(`/api/admin/penumpang/${id}`, config);
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data penumpang berhasil dihapus.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          title: "text-brand-primary font-bold",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+        },
+      });
+
       fetchData();
     } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal tambah penumpang";
-      toast.error(pesan);
+      const pesan = err.response?.data?.message || "Gagal menghapus penumpang";
+      Swal.fire({
+        title: "Gagal!",
+        text: pesan,
+        icon: "error",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+        },
+      });
     }
-  };
-
-  // --- HANDLER EDIT ---
-  const openEdit = (p) => {
-    setEditData({
-      id: p.id_user || p.id, // Handle id consistency
-      nama: p.nama,
-      email: p.email,
-      password: "",
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://192.168.100.17:3001/api/admin/penumpang/${editData.id}`,
-        editData,
-        config
-      );
-      toast.success("Data penumpang diperbarui!");
-      setShowEditModal(false);
-      fetchData();
-    } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal update penumpang";
-      toast.error(pesan);
-    }
-  };
-
-  // --- HANDLER DELETE (SWEETALERT PRO) ---
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Hapus Penumpang ini?",
-      text: "Data yang dihapus tidak bisa dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-      buttonsStyling: false,
-
-      customClass: {
-        // Container & Popup (Blur + Estetik)
-        container: "backdrop-blur-sm bg-black/30",
-        popup:
-          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
-        title: "text-brand-primary font-bold text-2xl",
-        htmlContainer: "text-brand-dark/80",
-
-        // Tombol Konfirmasi (Tanpa animasi naik)
-        confirmButton:
-          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
-
-        // Tombol Batal
-        cancelButton:
-          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
-      },
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(
-          `http://192.168.100.17:3001/api/admin/penumpang/${id}`,
-          config
-        );
-
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Data penumpang berhasil dihapus.",
-          icon: "success",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            title: "text-brand-primary font-bold",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
-          },
-        });
-
-        fetchData();
-      } catch (err) {
-        const pesan =
-          err.response?.data?.message || "Gagal menghapus penumpang";
-        Swal.fire({
-          title: "Gagal!",
-          text: pesan,
-          icon: "error",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
-          },
-        });
-      }
-    }
-  };
+  }
 
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
@@ -378,6 +362,5 @@ function AdminDataPenumpang() {
       )}
     </div>
   );
-}
-
+};
 export default AdminDataPenumpang;

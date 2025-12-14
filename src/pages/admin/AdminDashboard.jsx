@@ -1,7 +1,7 @@
 // src/pages/admin/AdminDashboard.jsx (FINAL CLEAN)
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import {
   FaBus,
   FaUsers,
@@ -29,12 +29,7 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/admin/dashboard-stats",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get("/api/admin/dashboard-stats");
         if (res.data) {
           setStats(res.data);
         }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 // Menggunakan Font Awesome agar konsisten
 import { FaBus, FaClock, FaRoute, FaSignal, FaIdBadge } from "react-icons/fa";
 import DriverBottomNav from "../../components/DriverBottomNav";
@@ -36,12 +36,7 @@ function DriverHome() {
         }
 
         // Panggil API Dashboard Driver
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/driver-app/dashboard",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get("/api/driver-app/dashboard", {});
 
         if (res.data.hasBus) {
           setBusInfo(res.data.bus);

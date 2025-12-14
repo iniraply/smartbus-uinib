@@ -1,7 +1,7 @@
 // src/pages/admin/AdminDataBus.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaUserTie, FaTrash, FaPlus, FaEdit } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -38,189 +38,177 @@ function AdminDataBus() {
   const [loading, setLoading] = useState(false);
 
   const getAuthToken = () => localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+  const config = {};
+}
 
-  // --- FETCH DATA ---
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [busRes, driverRes] = await Promise.all([
-        axios.get("http://192.168.100.17:3001/api/admin/bus", config),
-        axios.get("http://192.168.100.17:3001/api/admin/drivers-list", config),
-      ]);
-      setBusList(busRes.data);
-      setDriverList(driverRes.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal memuat data.");
-    } finally {
-      setLoading(false);
-    }
-  };
+// --- FETCH DATA ---
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    const [busRes, driverRes] = await Promise.all([
+      axios.get("/api/admin/bus", config),
+      axios.get("/api/admin/drivers-list", config),
+    ]);
+    setBusList(busRes.data);
+    setDriverList(driverRes.data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Gagal memuat data.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+  fetchData();
+}, []);
+
+// --- HANDLER TAMBAH ---
+const handleAddBus = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post("/api/admin/bus", newBus, config);
+    toast.success("Bus berhasil ditambahkan!");
+    setShowAddModal(false);
+    setNewBus({
+      nama_bus: "",
+      plat_nomor: "",
+      rute: "",
+      status_bus: "Aktif",
+    });
     fetchData();
-  }, []);
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal menambah bus";
+    toast.error(pesan);
+  }
+};
 
-  // --- HANDLER TAMBAH ---
-  const handleAddBus = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(
-        "http://192.168.100.17:3001/api/admin/bus",
-        newBus,
-        config
-      );
-      toast.success("Bus berhasil ditambahkan!");
-      setShowAddModal(false);
-      setNewBus({
-        nama_bus: "",
-        plat_nomor: "",
-        rute: "",
-        status_bus: "Aktif",
-      });
-      fetchData();
-    } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal menambah bus";
-      toast.error(pesan);
-    }
-  };
+// --- HANDLER EDIT ---
+const openEditModal = (bus) => {
+  setEditData({
+    id_bus: bus.id_bus,
+    nama_bus: bus.nama_bus,
+    plat_nomor: bus.plat_nomor || "",
+    rute: bus.rute,
+    status_bus: bus.status_bus,
+  });
+  setShowEditModal(true);
+};
 
-  // --- HANDLER EDIT ---
-  const openEditModal = (bus) => {
-    setEditData({
-      id_bus: bus.id_bus,
-      nama_bus: bus.nama_bus,
-      plat_nomor: bus.plat_nomor || "",
-      rute: bus.rute,
-      status_bus: bus.status_bus,
-    });
-    setShowEditModal(true);
-  };
+const handleUpdateBus = async (e) => {
+  e.preventDefault();
+  try {
+    await api.put(`/api/admin/bus/${editData.id_bus}`, editData, config);
+    toast.success("Data bus diperbarui!");
+    setShowEditModal(false);
+    fetchData();
+  } catch (err) {
+    const pesan = err.response?.data?.message || "Gagal update bus";
+    toast.error(pesan);
+  }
+};
 
-  const handleUpdateBus = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://192.168.100.17:3001/api/admin/bus/${editData.id_bus}`,
-        editData,
-        config
-      );
-      toast.success("Data bus diperbarui!");
-      setShowEditModal(false);
-      fetchData();
-    } catch (err) {
-      const pesan = err.response?.data?.message || "Gagal update bus";
-      toast.error(pesan);
-    }
-  };
+// --- HANDLER ASSIGN ---
+const openAssignModal = (bus) => {
+  setSelectedBus(bus);
+  setSelectedDriverId(bus.driver_id || "");
+  setShowAssignModal(true);
+};
 
-  // --- HANDLER ASSIGN ---
-  const openAssignModal = (bus) => {
-    setSelectedBus(bus);
-    setSelectedDriverId(bus.driver_id || "");
-    setShowAssignModal(true);
-  };
-
-  const handleAssignDriver = async (e) => {
-    e.preventDefault();
-    if (!selectedBus) return;
-    try {
-      await axios.put(
-        `http://192.168.100.17:3001/api/admin/bus/${selectedBus.id_bus}/assign`,
-        {
-          driver_id: selectedDriverId || null,
-        },
-        config
-      );
-      toast.success(`Supir berhasil ditugaskan!`);
-      setShowAssignModal(false);
-      fetchData();
-    } catch (err) {
-      toast.error("Gagal update supir.");
-    }
-  };
-
-  // --- HANDLER DELETE (VERSI ESTETIK: BLUR + TEMA) ---
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Hapus Bus ini?",
-      text: "Data yang dihapus tidak bisa dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-
-      // Teks Tombol
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-
-      // MATIKAN Style Bawaan (Wajib!)
-      buttonsStyling: false,
-
-      // Kustomisasi Tampilan dengan Tailwind
-      customClass: {
-        // 1. Container: Memberikan efek Blur di belakang
-        container: "backdrop-blur-sm bg-black/30",
-
-        // 2. Popup: Membuat sudut membulat & border halus sesuai tema
-        popup:
-          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
-
-        // 3. Judul: Warna Maroon
-        title: "text-brand-primary font-bold text-2xl",
-
-        // 4. Konten/Teks: Warna gelap
-        htmlContainer: "text-brand-dark/80",
-
-        // 5. Tombol Konfirmasi (Maroon - Sesuai Tema)
-        confirmButton:
-          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
-
-        // 6. Tombol Batal (Abu-abu/Netral)
-        cancelButton:
-          "bg-gray-200 hover:bg-gray-400 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all hover:bg-gray-300",
+const handleAssignDriver = async (e) => {
+  e.preventDefault();
+  if (!selectedBus) return;
+  try {
+    await api.put(
+      `/api/admin/bus/${selectedBus.id_bus}/assign`,
+      {
+        driver_id: selectedDriverId || null,
       },
-    });
+      config
+    );
+    toast.success(`Supir berhasil ditugaskan!`);
+    setShowAssignModal(false);
+    fetchData();
+  } catch (err) {
+    toast.error("Gagal update supir.");
+  }
+};
 
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(
-          `http://192.168.100.17:3001/api/admin/bus/${id}`,
-          config
-        );
+// --- HANDLER DELETE (VERSI ESTETIK: BLUR + TEMA) ---
+const handleDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Hapus Bus ini?",
+    text: "Data yang dihapus tidak bisa dikembalikan!",
+    icon: "warning",
+    showCancelButton: true,
 
-        // Notif Sukses (Juga disesuaikan)
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Data bus berhasil dihapus.",
-          icon: "success",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            title: "text-brand-primary font-bold",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
-          },
-        });
+    // Teks Tombol
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    reverseButtons: true,
 
-        fetchData();
-      } catch (err) {
-        // Notif Gagal
-        const pesan = err.response?.data?.message || "Gagal menghapus data";
-        Swal.fire({
-          title: "Gagal!",
-          text: pesan,
-          icon: "error",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
-          },
-        });
-      }
+    // MATIKAN Style Bawaan (Wajib!)
+    buttonsStyling: false,
+
+    // Kustomisasi Tampilan dengan Tailwind
+    customClass: {
+      // 1. Container: Memberikan efek Blur di belakang
+      container: "backdrop-blur-sm bg-black/30",
+
+      // 2. Popup: Membuat sudut membulat & border halus sesuai tema
+      popup: "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+
+      // 3. Judul: Warna Maroon
+      title: "text-brand-primary font-bold text-2xl",
+
+      // 4. Konten/Teks: Warna gelap
+      htmlContainer: "text-brand-dark/80",
+
+      // 5. Tombol Konfirmasi (Maroon - Sesuai Tema)
+      confirmButton:
+        "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+      // 6. Tombol Batal (Abu-abu/Netral)
+      cancelButton:
+        "bg-gray-200 hover:bg-gray-400 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all hover:bg-gray-300",
+    },
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await api.delete(`/api/admin/bus/${id}`, config);
+
+      // Notif Sukses (Juga disesuaikan)
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Data bus berhasil dihapus.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          title: "text-brand-primary font-bold",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+        },
+      });
+
+      fetchData();
+    } catch (err) {
+      // Notif Gagal
+      const pesan = err.response?.data?.message || "Gagal menghapus data";
+      Swal.fire({
+        title: "Gagal!",
+        text: pesan,
+        icon: "error",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+        },
+      });
     }
-  };
+  }
 
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
@@ -495,6 +483,5 @@ function AdminDataBus() {
       )}
     </div>
   );
-}
-
+};
 export default AdminDataBus;

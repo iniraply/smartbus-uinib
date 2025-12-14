@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaBus, FaMapMarkerAlt, FaClock, FaRoute } from "react-icons/fa";
 import BottomNav from "../../components/BottomNav";
 
@@ -28,12 +28,7 @@ function HomePenumpang() {
         }
 
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/penumpang/jadwal",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get("/api/penumpang/jadwal", {});
 
         // Ambil 2 jadwal pertama saja untuk preview di Home
         setTodaysSchedule(res.data.slice(0, 2));

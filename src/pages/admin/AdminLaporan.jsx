@@ -1,7 +1,7 @@
 // src/pages/admin/AdminLaporan.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaTrash, FaEnvelope, FaClipboardList } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -12,105 +12,98 @@ function AdminLaporan() {
   const [loading, setLoading] = useState(false);
 
   const getAuthToken = () => localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+  const config = {};
+}
 
-  // --- 1. FUNGSI READ (GET ALL LAPORAN) ---
-  const fetchLaporan = async () => {
-    setLoading(true);
+// --- 1. FUNGSI READ (GET ALL LAPORAN) ---
+const fetchLaporan = async () => {
+  setLoading(true);
+  try {
+    const res = await api.get("/api/admin/laporan", config);
+    setLaporanList(res.data);
+  } catch (err) {
+    const pesan = err.response?.data?.message || err.message;
+    console.error(err);
+    toast.error("Gagal mengambil data laporan: " + pesan);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchLaporan();
+}, []);
+
+// --- 2. FUNGSI DELETE (SWEETALERT PRO) ---
+const handleDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Hapus Laporan ini?",
+    text: "Data yang dihapus tidak bisa dikembalikan!",
+    icon: "warning",
+    showCancelButton: true,
+
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    reverseButtons: true,
+    buttonsStyling: false,
+
+    customClass: {
+      // Container & Popup (Blur + Estetik)
+      container: "backdrop-blur-sm bg-black/30",
+      popup: "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+      title: "text-brand-primary font-bold text-2xl",
+      htmlContainer: "text-brand-dark/80",
+
+      // Tombol Konfirmasi (Tanpa animasi naik)
+      confirmButton:
+        "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+      // Tombol Batal
+      cancelButton:
+        "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+    },
+  });
+
+  if (result.isConfirmed) {
     try {
-      const res = await axios.get(
-        "http://192.168.100.17:3001/api/admin/laporan",
-        config
-      );
-      setLaporanList(res.data);
+      await api.delete(`/api/admin/laporan/${id}`, config);
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Laporan berhasil dihapus.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          title: "text-brand-primary font-bold",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+        },
+      });
+
+      fetchLaporan(); // Muat ulang daftar laporan
     } catch (err) {
-      const pesan = err.response?.data?.message || err.message;
-      console.error(err);
-      toast.error("Gagal mengambil data laporan: " + pesan);
-    } finally {
-      setLoading(false);
+      const pesan = err.response?.data?.message || "Gagal menghapus laporan.";
+      Swal.fire({
+        title: "Gagal!",
+        text: pesan,
+        icon: "error",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+        },
+      });
     }
-  };
+  }
+};
 
-  useEffect(() => {
-    fetchLaporan();
-  }, []);
-
-  // --- 2. FUNGSI DELETE (SWEETALERT PRO) ---
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Hapus Laporan ini?",
-      text: "Data yang dihapus tidak bisa dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-      buttonsStyling: false,
-
-      customClass: {
-        // Container & Popup (Blur + Estetik)
-        container: "backdrop-blur-sm bg-black/30",
-        popup:
-          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
-        title: "text-brand-primary font-bold text-2xl",
-        htmlContainer: "text-brand-dark/80",
-
-        // Tombol Konfirmasi (Tanpa animasi naik)
-        confirmButton:
-          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
-
-        // Tombol Batal
-        cancelButton:
-          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
-      },
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(
-          `http://192.168.100.17:3001/api/admin/laporan/${id}`,
-          config
-        );
-
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Laporan berhasil dihapus.",
-          icon: "success",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            title: "text-brand-primary font-bold",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
-          },
-        });
-
-        fetchLaporan(); // Muat ulang daftar laporan
-      } catch (err) {
-        const pesan = err.response?.data?.message || "Gagal menghapus laporan.";
-        Swal.fire({
-          title: "Gagal!",
-          text: pesan,
-          icon: "error",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
-          },
-        });
-      }
-    }
-  };
-
-  // Fungsi untuk format tanggal
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === "0000-00-00") return "-"; // Handle tanggal kosong
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
-  };
+// Fungsi untuk format tanggal
+const formatDate = (dateString) => {
+  if (!dateString || dateString === "0000-00-00") return "-"; // Handle tanggal kosong
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  return new Date(dateString).toLocaleDateString("id-ID", options);
 
   return (
     // 1. BACKGROUND KREM
@@ -211,6 +204,5 @@ function AdminLaporan() {
       </main>
     </div>
   );
-}
-
+};
 export default AdminLaporan;

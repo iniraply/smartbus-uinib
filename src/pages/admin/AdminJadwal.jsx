@@ -1,7 +1,7 @@
 // src/pages/admin/AdminJadwal.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import {
   FaCalendarAlt,
   FaTrash,
@@ -33,146 +33,134 @@ function AdminJadwal() {
 
   const [loading, setLoading] = useState(false);
   const getAuthToken = () => localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
+  const config = {};
+}
 
-  // --- FETCH DATA ---
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Ambil Data Jadwal & Bus secara paralel
-      const [resJadwal, resBus] = await Promise.all([
-        axios.get("http://192.168.100.17:3001/api/admin/jadwal", config),
-        axios.get("http://192.168.100.17:3001/api/admin/bus", config),
-      ]);
+// --- FETCH DATA ---
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    // Ambil Data Jadwal & Bus secara paralel
+    const [resJadwal, resBus] = await Promise.all([
+      axios.get("/api/admin/jadwal", config),
+      axios.get("/api/admin/bus", config),
+    ]);
 
-      setJadwalList(resJadwal.data);
-      setBusList(resBus.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal memuat data jadwal.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setJadwalList(resJadwal.data);
+    setBusList(resBus.data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Gagal memuat data jadwal.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+  fetchData();
+}, []);
+
+// --- HANDLER TAMBAH ---
+const handleAdd = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post("/api/admin/jadwal", newData, config);
+    toast.success("Jadwal berhasil ditambahkan!");
+    setShowAddModal(false);
+    setNewData({ id_bus: "", waktu: "", tujuan: "" });
     fetchData();
-  }, []);
+  } catch (err) {
+    const msg = err.response?.data?.message || "Gagal tambah jadwal";
+    toast.error(msg);
+  }
+};
 
-  // --- HANDLER TAMBAH ---
-  const handleAdd = async (e) => {
-    e.preventDefault();
+// --- HANDLER EDIT ---
+const openEdit = (item) => {
+  setEditData({
+    id_jadwal: item.id_jadwal,
+    id_bus: item.id_bus,
+    waktu: item.waktu,
+    tujuan: item.tujuan || item.rute, // Sesuaikan dengan nama kolom di DB
+  });
+  setShowEditModal(true);
+};
+
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    await api.put(`/api/admin/jadwal/${editData.id_jadwal}`, editData, config);
+    toast.success("Jadwal berhasil diperbarui!");
+    setShowEditModal(false);
+    fetchData();
+  } catch (err) {
+    const msg = err.response?.data?.message || "Gagal update jadwal";
+    toast.error(msg);
+  }
+};
+
+// --- HANDLER DELETE (SWEETALERT PRO) ---
+const handleDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Hapus Jadwal ini?",
+    text: "Data yang dihapus tidak bisa dikembalikan!",
+    icon: "warning",
+    showCancelButton: true,
+
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    reverseButtons: true,
+    buttonsStyling: false,
+
+    customClass: {
+      // Container & Popup (Blur + Estetik)
+      container: "backdrop-blur-sm bg-black/30",
+      popup: "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
+      title: "text-brand-primary font-bold text-2xl",
+      htmlContainer: "text-brand-dark/80",
+
+      // Tombol Konfirmasi (Tanpa animasi naik)
+      confirmButton:
+        "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
+
+      // Tombol Batal
+      cancelButton:
+        "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
+    },
+  });
+
+  if (result.isConfirmed) {
     try {
-      await axios.post(
-        "http://192.168.100.17:3001/api/admin/jadwal",
-        newData,
-        config
-      );
-      toast.success("Jadwal berhasil ditambahkan!");
-      setShowAddModal(false);
-      setNewData({ id_bus: "", waktu: "", tujuan: "" });
+      await api.delete(`/api/admin/jadwal/${id}`, config);
+
+      Swal.fire({
+        title: "Terhapus!",
+        text: "Jadwal berhasil dihapus.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          title: "text-brand-primary font-bold",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
+        },
+      });
+
       fetchData();
     } catch (err) {
-      const msg = err.response?.data?.message || "Gagal tambah jadwal";
-      toast.error(msg);
+      Swal.fire({
+        title: "Gagal!",
+        text: "Gagal menghapus jadwal.",
+        icon: "error",
+        buttonsStyling: false,
+        customClass: {
+          popup: "rounded-2xl shadow-2xl font-sans",
+          confirmButton:
+            "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
+        },
+      });
     }
-  };
-
-  // --- HANDLER EDIT ---
-  const openEdit = (item) => {
-    setEditData({
-      id_jadwal: item.id_jadwal,
-      id_bus: item.id_bus,
-      waktu: item.waktu,
-      tujuan: item.tujuan || item.rute, // Sesuaikan dengan nama kolom di DB
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://192.168.100.17:3001/api/admin/jadwal/${editData.id_jadwal}`,
-        editData,
-        config
-      );
-      toast.success("Jadwal berhasil diperbarui!");
-      setShowEditModal(false);
-      fetchData();
-    } catch (err) {
-      const msg = err.response?.data?.message || "Gagal update jadwal";
-      toast.error(msg);
-    }
-  };
-
-  // --- HANDLER DELETE (SWEETALERT PRO) ---
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Hapus Jadwal ini?",
-      text: "Data yang dihapus tidak bisa dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-
-      confirmButtonText: "Ya, Hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-      buttonsStyling: false,
-
-      customClass: {
-        // Container & Popup (Blur + Estetik)
-        container: "backdrop-blur-sm bg-black/30",
-        popup:
-          "rounded-2xl shadow-2xl border border-brand-primary/10 font-sans",
-        title: "text-brand-primary font-bold text-2xl",
-        htmlContainer: "text-brand-dark/80",
-
-        // Tombol Konfirmasi (Tanpa animasi naik)
-        confirmButton:
-          "bg-brand-primary hover:bg-brand-dark text-white font-bold py-3 px-6 rounded-xl ml-3 shadow-lg hover:shadow-xl transition-all",
-
-        // Tombol Batal
-        cancelButton:
-          "bg-gray-200 hover:bg-gray-300 text-brand-dark font-bold py-3 px-6 rounded-xl shadow-md transition-all",
-      },
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(
-          `http://192.168.100.17:3001/api/admin/jadwal/${id}`,
-          config
-        );
-
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Jadwal berhasil dihapus.",
-          icon: "success",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            title: "text-brand-primary font-bold",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl shadow-lg",
-          },
-        });
-
-        fetchData();
-      } catch (err) {
-        Swal.fire({
-          title: "Gagal!",
-          text: "Gagal menghapus jadwal.",
-          icon: "error",
-          buttonsStyling: false,
-          customClass: {
-            popup: "rounded-2xl shadow-2xl font-sans",
-            confirmButton:
-              "bg-brand-primary text-white font-bold py-2 px-6 rounded-xl",
-          },
-        });
-      }
-    }
-  };
+  }
 
   return (
     <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
@@ -411,6 +399,5 @@ function AdminJadwal() {
       )}
     </div>
   );
-}
-
+};
 export default AdminJadwal;

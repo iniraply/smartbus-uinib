@@ -1,7 +1,7 @@
 // src/pages/LoginPenumpang.jsx (FINAL CLEAN + TOASTIFY)
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
@@ -27,10 +27,7 @@ function LoginPenumpang() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://192.168.100.17:3001/api/auth/login/penumpang",
-        formData
-      );
+      const res = await api.post("/api/auth/login/penumpang", formData);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));

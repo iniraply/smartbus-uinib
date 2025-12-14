@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import { FaBus, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import DriverBottomNav from "../../components/DriverBottomNav";
@@ -17,12 +17,7 @@ function DriverJadwal() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/driver-app/dashboard",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get("/api/driver-app/dashboard", {});
         if (res.data.hasBus) {
           setBusInfo(res.data.bus);
           setJadwal(res.data.jadwal);

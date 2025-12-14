@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import {
   ArrowLeftIcon,
   UserCircleIcon,
@@ -98,13 +98,9 @@ function ProfilDriver() {
       };
       if (formData.password) updateData.password = formData.password;
 
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const config = {};
 
-      const res = await axios.put(
-        "http://192.168.100.17:3001/api/users/profile",
-        updateData,
-        config
-      );
+      const res = await api.put("/api/users/profile", updateData, config);
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser({

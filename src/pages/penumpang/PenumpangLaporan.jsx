@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import { toast } from "react-toastify";
 import BottomNav from "../../components/BottomNav";
 
@@ -25,11 +25,7 @@ function PenumpangLaporan() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "http://192.168.100.17:3001/api/penumpang/laporan",
-        { subjek, deskripsi },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/api/penumpang/laporan", { subjek, deskripsi });
 
       // Notif Sukses
       toast.success("Laporan terkirim! Terima kasih atas masukan Anda.");

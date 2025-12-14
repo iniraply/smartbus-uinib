@@ -19,7 +19,7 @@ import {
   FaLocationArrow,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import L from "leaflet";
 import { toast } from "react-toastify";
 import BottomNav from "../../components/BottomNav";
@@ -169,10 +169,7 @@ function PenumpangLacak() {
 
   const fetchLocations = async () => {
     try {
-      const res = await axios.get(
-        "http://192.168.100.17:3001/api/penumpang/locations",
-        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-      );
+      const res = await api.get("/api/penumpang/locations", {});
       setActiveBuses(res.data);
 
       if (selectedBusId) {

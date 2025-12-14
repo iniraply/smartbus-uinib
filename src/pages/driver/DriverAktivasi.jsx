@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import {
@@ -72,12 +72,7 @@ function DriverAktivasi() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/driver-app/dashboard",
-          {
-            headers: { Authorization: `Bearer ${getAuthToken()}` },
-          }
-        );
+        const res = await api.get("/api/driver-app/dashboard", {});
         if (res.data.hasBus) {
           if (res.data.bus.status_bus === "Aktif") {
             setIsActive(true);
@@ -98,11 +93,10 @@ function DriverAktivasi() {
   // Kirim lokasi ke backend
   const sendLocationToBackend = async (lat, lng) => {
     try {
-      await axios.post(
-        "http://192.168.100.17:3001/api/driver-app/location",
-        { latitude: lat, longitude: lng },
-        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-      );
+      await api.post("/api/driver-app/location", {
+        latitude: lat,
+        longitude: lng,
+      });
     } catch (err) {
       console.error("Gagal kirim lokasi:", err);
     }
@@ -163,11 +157,7 @@ function DriverAktivasi() {
     if (result.isConfirmed) {
       setLoading(true);
       try {
-        await axios.put(
-          "http://192.168.100.17:3001/api/driver-app/status",
-          { status: newStatus },
-          { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-        );
+        await api.put("/api/driver-app/status", { status: newStatus });
 
         setIsActive(!isActive);
         if (newStatus === "Aktif") {
@@ -191,11 +181,9 @@ function DriverAktivasi() {
   const handleToggleCapacity = async () => {
     const newCapacity = !isFull ? "Penuh" : "Tersedia";
     try {
-      await axios.put(
-        "http://192.168.100.17:3001/api/driver-app/capacity",
-        { status_penumpang: newCapacity },
-        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-      );
+      await api.put("/api/driver-app/capacity", {
+        status_penumpang: newCapacity,
+      });
       setIsFull(!isFull);
       if (!isFull) toast.warn("Status Bus: PENUH");
       else toast.success("Status Bus: TERSEDIA");

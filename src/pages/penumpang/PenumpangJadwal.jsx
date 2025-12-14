@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/api";
 import BottomNav from "../../components/BottomNav";
 
 function PenumpangJadwal() {
@@ -16,12 +16,7 @@ function PenumpangJadwal() {
     const fetchJadwal = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://192.168.100.17:3001/api/penumpang/jadwal",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await api.get("/api/penumpang/jadwal", {});
         setJadwalList(res.data);
       } catch (err) {
         console.error("Gagal ambil jadwal", err);
