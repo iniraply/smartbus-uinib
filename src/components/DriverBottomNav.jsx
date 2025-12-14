@@ -8,7 +8,7 @@ function DriverBottomNav() {
   const activePath = location.pathname;
 
   const getClassName = (path) => {
-    return activePath === path ? "text-blue-600" : "text-gray-500";
+    return activePath === path ? "text-brand-accent" : "text-gray-500";
   };
 
   return (

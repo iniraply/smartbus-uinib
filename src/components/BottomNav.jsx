@@ -16,7 +16,7 @@ function BottomNav() {
 
   const getClassName = (path) => {
     return activePath === path
-      ? "text-blue-600" // Aktif
+      ? "text-brand-accent" // Aktif
       : "text-gray-500"; // Tidak Aktif
   };
 
