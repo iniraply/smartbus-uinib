@@ -41,8 +41,8 @@ function AdminJadwal() {
     try {
       // Ambil Data Jadwal & Bus secara paralel
       const [resJadwal, resBus] = await Promise.all([
-        axios.get("http://localhost:3001/api/admin/jadwal", config),
-        axios.get("http://localhost:3001/api/admin/bus", config),
+        axios.get("http://192.168.100.17:3001/api/admin/jadwal", config),
+        axios.get("http://192.168.100.17:3001/api/admin/bus", config),
       ]);
 
       setJadwalList(resJadwal.data);
@@ -64,11 +64,11 @@ function AdminJadwal() {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:3001/api/admin/jadwal",
+        "http://192.168.100.17:3001/api/admin/jadwal",
         newData,
         config
       );
-      toast.success("Jadwal berhasil ditambahkan! 📅");
+      toast.success("Jadwal berhasil ditambahkan!");
       setShowAddModal(false);
       setNewData({ id_bus: "", waktu: "", tujuan: "" });
       fetchData();
@@ -93,11 +93,11 @@ function AdminJadwal() {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:3001/api/admin/jadwal/${editData.id_jadwal}`,
+        `http://192.168.100.17:3001/api/admin/jadwal/${editData.id_jadwal}`,
         editData,
         config
       );
-      toast.success("Jadwal berhasil diperbarui! ✅");
+      toast.success("Jadwal berhasil diperbarui!");
       setShowEditModal(false);
       fetchData();
     } catch (err) {
@@ -140,7 +140,7 @@ function AdminJadwal() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:3001/api/admin/jadwal/${id}`,
+          `http://192.168.100.17:3001/api/admin/jadwal/${id}`,
           config
         );
 
@@ -264,7 +264,7 @@ function AdminJadwal() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
             <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
-              <FaPlus /> Tambah Jadwal
+              Tambah Jadwal
             </h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>

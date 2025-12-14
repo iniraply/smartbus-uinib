@@ -37,7 +37,7 @@ function AdminDataDriver() {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://localhost:3001/api/admin/drivers",
+        "http://192.168.100.17:3001/api/admin/drivers",
         config
       );
       setDrivers(res.data);
@@ -58,11 +58,11 @@ function AdminDataDriver() {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:3001/api/admin/drivers",
+        "http://192.168.100.17:3001/api/admin/drivers",
         newDriver,
         config
       );
-      toast.success("Driver berhasil ditambahkan! 🎉");
+      toast.success("Driver berhasil ditambahkan!");
       setShowAddModal(false);
       setNewDriver({ nama: "", email: "", password: "" });
       fetchDrivers();
@@ -88,11 +88,11 @@ function AdminDataDriver() {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:3001/api/admin/drivers/${editData.id}`,
+        `http://192.168.100.17:3001/api/admin/drivers/${editData.id}`,
         editData,
         config
       );
-      toast.success("Data driver diperbarui! ✅");
+      toast.success("Data driver diperbarui!");
       setShowEditModal(false);
       fetchDrivers();
     } catch (err) {
@@ -135,7 +135,7 @@ function AdminDataDriver() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:3001/api/admin/drivers/${id}`,
+          `http://192.168.100.17:3001/api/admin/drivers/${id}`,
           config
         );
 
@@ -263,7 +263,7 @@ function AdminDataDriver() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
             <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
-              <FaPlus /> Tambah Driver Baru
+              Tambah Driver
             </h2>
             <form onSubmit={handleAddDriver} className="space-y-4">
               <input

@@ -1,4 +1,4 @@
-// src/pages/penumpang/ProfilPenumpang.jsx (TAMPILAN BARU)
+// src/pages/penumpang/ProfilPenumpang.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,9 @@ import {
   XMarkIcon,
   PowerIcon,
 } from "@heroicons/react/24/solid";
-import BottomNav from "../../components/BottomNav"; // Tetap pakai Navigasi Penumpang
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import BottomNav from "../../components/BottomNav";
 
 function ProfilPenumpang() {
   const navigate = useNavigate();
@@ -22,14 +24,35 @@ function ProfilPenumpang() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // --- FUNGSI LOGOUT ---
-  const handleLogout = () => {
-    if (window.confirm("Anda yakin ingin logout?")) {
+  // --- FUNGSI LOGOUT (SWEETALERT) ---
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Yakin ingin Logout?",
+      text: "Anda harus login kembali untuk masuk.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Keluar",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        container: "backdrop-blur-sm bg-black/30",
+        popup: "rounded-2xl shadow-2xl font-sans",
+        title: "text-brand-dark font-bold text-xl",
+        htmlContainer: "text-gray-600",
+        confirmButton:
+          "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-xl ml-2 shadow-md transition-all",
+        cancelButton:
+          "bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-xl shadow-sm transition-all",
+      },
+    });
+
+    if (result.isConfirmed) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       navigate("/");
+      toast.success("Berhasil Logout");
     }
   };
 
@@ -55,7 +78,6 @@ function ProfilPenumpang() {
       username: user.username,
       password: "",
     });
-    setError("");
     setShowModal(true);
   };
 
@@ -67,7 +89,6 @@ function ProfilPenumpang() {
   const handleModalSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     const token = localStorage.getItem("token");
 
     try {
@@ -80,7 +101,7 @@ function ProfilPenumpang() {
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       const res = await axios.put(
-        "http://localhost:3001/api/users/profile",
+        "http://192.168.100.17:3001/api/users/profile",
         updateData,
         config
       );
@@ -93,15 +114,19 @@ function ProfilPenumpang() {
 
       setLoading(false);
       setShowModal(false);
-      alert("Profil berhasil diperbarui!");
+
+      // Notif Sukses
+      toast.success("Profil berhasil diperbarui!");
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "Gagal memperbarui profil.");
+      // Notif Gagal
+      const msg = err.response?.data?.message || "Gagal memperbarui profil.";
+      toast.error(msg);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream font-sans">
       {/* Header */}
       <header className="flex items-center p-4 bg-white/50 backdrop-blur-md shadow-sm z-10 sticky top-0 border-b border-brand-primary/10">
         <button
@@ -116,26 +141,26 @@ function ProfilPenumpang() {
         <div className="w-6"></div>
       </header>
 
-      {/* Konten Profil (Style Baru ala Driver) */}
+      {/* Konten Profil */}
       <main className="flex-grow p-4 space-y-4 pb-24">
-        <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+        <div className="bg-white shadow-lg rounded-2xl p-6 flex flex-col items-center animate-fade-in-up border border-brand-primary/5">
           {/* Lingkaran Biru di Belakang Ikon */}
-          <div className="bg-brand-primary/10 p-4 rounded-full mb-4">
-            <UserCircleIcon className="h-20 w-20 text-brand-accent" />
+          <div className="bg-brand-primary/5 p-4 rounded-full mb-4">
+            <UserCircleIcon className="h-20 w-20 text-brand-primary" />
           </div>
 
           {/* Info User */}
-          <div className="w-full space-y-3 text-left">
-            <div className="border-b pb-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">
+          <div className="w-full space-y-4 text-left">
+            <div className="border-b border-gray-100 pb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">
                 Username
               </label>
               <p className="text-lg font-semibold text-brand-dark">
                 {user.username}
               </p>
             </div>
-            <div className="border-b pb-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">
+            <div className="border-b border-gray-100 pb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">
                 Email
               </label>
               <p className="text-lg font-semibold text-brand-dark">
@@ -143,10 +168,10 @@ function ProfilPenumpang() {
               </p>
             </div>
             <div className="pb-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">
                 Peran
               </label>
-              <p className="text-lg font-semibold text-brand-accent">
+              <p className="text-lg font-semibold text-brand-primary">
                 Penumpang Umum
               </p>
             </div>
@@ -155,14 +180,14 @@ function ProfilPenumpang() {
           {/* Tombol Aksi */}
           <button
             onClick={handleEditClick}
-            className="mt-6 w-full bg-brand-accent text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-brand-dark transition-colors"
+            className="mt-8 w-full bg-brand-primary text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:bg-brand-dark transition-all transform active:scale-95"
           >
             Edit Profil
           </button>
 
           <button
             onClick={handleLogout}
-            className="mt-3 w-full bg-white border-2 border-red-500 text-red-500 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-red-50 flex items-center justify-center gap-2 transition-colors"
+            className="mt-3 w-full bg-white border-2 border-red-100 text-red-500 font-bold py-3 px-4 rounded-xl shadow-sm hover:bg-red-50 hover:border-red-200 flex items-center justify-center gap-2 transition-all"
           >
             <PowerIcon className="h-5 w-5" />
             Logout
@@ -172,19 +197,23 @@ function ProfilPenumpang() {
 
       {/* --- Modal Edit Profil --- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-100">
-            <div className="flex justify-between items-center p-4 border-b">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
+            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
               <h3 className="text-lg font-bold text-brand-dark">
                 Edit Data Diri
               </h3>
-              <button onClick={() => setShowModal(false)}>
-                <XMarkIcon className="h-6 w-6 text-gray-400 hover:text-gray-600" />
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6 text-gray-500" />
               </button>
             </div>
-            <form onSubmit={handleModalSubmit} className="p-4 space-y-4">
+
+            <form onSubmit={handleModalSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Username
                 </label>
                 <input
@@ -192,11 +221,11 @@ function ProfilPenumpang() {
                   name="username"
                   value={formData.username}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Email
                 </label>
                 <input
@@ -204,11 +233,11 @@ function ProfilPenumpang() {
                   name="email"
                   value={formData.email}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Password Baru (Opsional)
                 </label>
                 <input
@@ -217,30 +246,24 @@ function ProfilPenumpang() {
                   value={formData.password}
                   onChange={onModalChange}
                   placeholder="Kosongkan jika tidak diganti"
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none transition-all"
                 />
               </div>
 
-              {error && (
-                <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">
-                  {error}
-                </p>
-              )}
-
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 font-medium bg-brand-cream rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-gray-600 font-bold bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 text-white font-medium bg-brand-accent rounded-lg hover:bg-brand-dark disabled:bg-gray-400 transition-colors shadow-md"
+                  className="px-4 py-2 text-white font-bold bg-brand-primary rounded-lg hover:bg-brand-dark disabled:bg-gray-400 transition-colors shadow-md"
                 >
-                  {loading ? "Menyimpan..." : "Simpan Perubahan"}
+                  {loading ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
             </form>
@@ -248,7 +271,6 @@ function ProfilPenumpang() {
         </div>
       )}
 
-      {/* BottomNav Penumpang */}
       <BottomNav />
     </div>
   );

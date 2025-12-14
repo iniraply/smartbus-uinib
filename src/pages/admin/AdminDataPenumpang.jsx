@@ -32,7 +32,7 @@ function AdminDataPenumpang() {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://localhost:3001/api/admin/penumpang",
+        "http://192.168.100.17:3001/api/admin/penumpang",
         config
       );
       setPenumpang(res.data);
@@ -53,11 +53,11 @@ function AdminDataPenumpang() {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:3001/api/admin/penumpang",
+        "http://192.168.100.17:3001/api/admin/penumpang",
         newData,
         config
       );
-      toast.success("Penumpang berhasil ditambahkan! 🎉");
+      toast.success("Penumpang berhasil ditambahkan!");
       setShowAddModal(false);
       setNewData({ nama: "", email: "", password: "" });
       fetchData();
@@ -82,11 +82,11 @@ function AdminDataPenumpang() {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:3001/api/admin/penumpang/${editData.id}`,
+        `http://192.168.100.17:3001/api/admin/penumpang/${editData.id}`,
         editData,
         config
       );
-      toast.success("Data penumpang diperbarui! ✅");
+      toast.success("Data penumpang diperbarui!");
       setShowEditModal(false);
       fetchData();
     } catch (err) {
@@ -129,7 +129,7 @@ function AdminDataPenumpang() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:3001/api/admin/penumpang/${id}`,
+          `http://192.168.100.17:3001/api/admin/penumpang/${id}`,
           config
         );
 
@@ -256,7 +256,7 @@ function AdminDataPenumpang() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
             <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
-              <FaPlus /> Tambah Penumpang
+              Tambah Penumpang
             </h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <input

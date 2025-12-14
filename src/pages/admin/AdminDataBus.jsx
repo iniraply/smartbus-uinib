@@ -45,8 +45,8 @@ function AdminDataBus() {
     setLoading(true);
     try {
       const [busRes, driverRes] = await Promise.all([
-        axios.get("http://localhost:3001/api/admin/bus", config),
-        axios.get("http://localhost:3001/api/admin/drivers-list", config),
+        axios.get("http://192.168.100.17:3001/api/admin/bus", config),
+        axios.get("http://192.168.100.17:3001/api/admin/drivers-list", config),
       ]);
       setBusList(busRes.data);
       setDriverList(driverRes.data);
@@ -66,7 +66,11 @@ function AdminDataBus() {
   const handleAddBus = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:3001/api/admin/bus", newBus, config);
+      await axios.post(
+        "http://192.168.100.17:3001/api/admin/bus",
+        newBus,
+        config
+      );
       toast.success("Bus berhasil ditambahkan!");
       setShowAddModal(false);
       setNewBus({
@@ -98,7 +102,7 @@ function AdminDataBus() {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:3001/api/admin/bus/${editData.id_bus}`,
+        `http://192.168.100.17:3001/api/admin/bus/${editData.id_bus}`,
         editData,
         config
       );
@@ -123,7 +127,7 @@ function AdminDataBus() {
     if (!selectedBus) return;
     try {
       await axios.put(
-        `http://localhost:3001/api/admin/bus/${selectedBus.id_bus}/assign`,
+        `http://192.168.100.17:3001/api/admin/bus/${selectedBus.id_bus}/assign`,
         {
           driver_id: selectedDriverId || null,
         },
@@ -180,7 +184,10 @@ function AdminDataBus() {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3001/api/admin/bus/${id}`, config);
+        await axios.delete(
+          `http://192.168.100.17:3001/api/admin/bus/${id}`,
+          config
+        );
 
         // Notif Sukses (Juga disesuaikan)
         Swal.fire({
@@ -317,7 +324,7 @@ function AdminDataBus() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
             <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
-              <FaPlus /> Tambah Bus
+              Tambah Bus
             </h2>
             <form onSubmit={handleAddBus} className="space-y-4">
               <input

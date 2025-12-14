@@ -29,7 +29,7 @@ function HomePenumpang() {
 
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          "http://localhost:3001/api/penumpang/jadwal",
+          "http://192.168.100.17:3001/api/penumpang/jadwal",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

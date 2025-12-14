@@ -15,7 +15,7 @@ export default function AdminLogout() {
     localStorage.removeItem("role");
 
     // 2. Notifikasi Sukses
-    toast.success("Logout berhasil. Sampai jumpa! 👋", {
+    toast.success("Logout berhasil!", {
       position: "top-center",
       autoClose: 2000,
     });

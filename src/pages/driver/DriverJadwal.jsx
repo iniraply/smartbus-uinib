@@ -18,7 +18,7 @@ function DriverJadwal() {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          "http://localhost:3001/api/driver-app/dashboard",
+          "http://192.168.100.17:3001/api/driver-app/dashboard",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

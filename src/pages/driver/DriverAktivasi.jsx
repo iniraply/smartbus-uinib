@@ -1,4 +1,4 @@
-// src/pages/driver/DriverAktivasi.jsx (IMMERSIVE UI)
+// src/pages/driver/DriverAktivasi.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
 import React, { useState, useEffect, useRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -6,16 +6,16 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-// Kita gunakan ikon Font Awesome agar konsisten
 import {
   FaBus,
   FaSignal,
   FaStopCircle,
-  FaArrowLeft,
   FaUsers,
   FaUsersSlash,
 } from "react-icons/fa";
-import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import DriverBottomNav from "../../components/DriverBottomNav";
 
 // --- 1. Fix Ikon Leaflet ---
@@ -30,18 +30,18 @@ L.Icon.Default.mergeOptions({
 // --- 2. Ikon Bus Custom ---
 const createBusIcon = () => {
   const iconMarkup = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center w-10 h-10">
-      <div className="absolute w-10 h-10 bg-brand-accent rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
-      <FaBus className="relative z-10 text-white w-5 h-5" />
-      <div className="absolute -bottom-1 w-3 h-3 bg-brand-accent rotate-45 border-b-2 border-r-2 border-white"></div>
+    <div className="relative flex items-center justify-center w-12 h-12">
+      <div className="absolute w-12 h-12 bg-brand-primary rounded-full border-2 border-white shadow-xl opacity-90 animate-pulse"></div>
+      <FaBus className="relative z-10 text-white w-6 h-6" />
+      <div className="absolute -bottom-1 w-3 h-3 bg-brand-primary rotate-45 border-b-2 border-r-2 border-white"></div>
     </div>
   );
   return L.divIcon({
     html: iconMarkup,
     className: "custom-bus-icon",
-    iconSize: [40, 40],
-    iconAnchor: [20, 45],
-    popupAnchor: [0, -40],
+    iconSize: [48, 48],
+    iconAnchor: [24, 48],
+    popupAnchor: [0, -48],
   });
 };
 
@@ -62,7 +62,7 @@ function DriverAktivasi() {
   const [isFull, setIsFull] = useState(false);
   const [position, setPosition] = useState([
     -0.8108711135090128, 100.37100177052656,
-  ]); // Default UIN IB
+  ]); // Default UIN IB Padang (Kampus 2/3 Area)
   const [loading, setLoading] = useState(false);
 
   const locationInterval = useRef(null);
@@ -73,7 +73,7 @@ function DriverAktivasi() {
     const checkStatus = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:3001/api/driver-app/dashboard",
+          "http://192.168.100.17:3001/api/driver-app/dashboard",
           {
             headers: { Authorization: `Bearer ${getAuthToken()}` },
           }
@@ -99,11 +99,8 @@ function DriverAktivasi() {
   const sendLocationToBackend = async (lat, lng) => {
     try {
       await axios.post(
-        "http://localhost:3001/api/driver-app/location",
-        {
-          latitude: lat,
-          longitude: lng,
-        },
+        "http://192.168.100.17:3001/api/driver-app/location",
+        { latitude: lat, longitude: lng },
         { headers: { Authorization: `Bearer ${getAuthToken()}` } }
       );
     } catch (err) {
@@ -114,7 +111,7 @@ function DriverAktivasi() {
   // Mulai tracking GPS
   const startTracking = () => {
     if (!navigator.geolocation) {
-      alert("Browser tidak mendukung Geolocation");
+      toast.error("Browser tidak mendukung Geolocation");
       return;
     }
     locationInterval.current = setInterval(() => {
@@ -138,31 +135,50 @@ function DriverAktivasi() {
 
   const handleToggleStatus = async () => {
     const newStatus = !isActive ? "Aktif" : "Tidak Aktif";
-    const confirmMsg = !isActive
-      ? "Aktifkan Layanan Bus? Lokasi Anda akan dilacak."
-      : "Matikan Layanan Bus?";
 
-    if (window.confirm(confirmMsg)) {
+    // --- GANTI CONFIRM BAWAAN DENGAN SWEETALERT ---
+    const result = await Swal.fire({
+      title: !isActive ? "Aktifkan Layanan?" : "Matikan Layanan?",
+      text: !isActive
+        ? "Lokasi Anda akan mulai dilacak penumpang."
+        : "Lokasi Anda tidak akan terlihat lagi.",
+      icon: !isActive ? "info" : "warning",
+      showCancelButton: true,
+      confirmButtonText: !isActive ? "Ya, Aktifkan" : "Ya, Matikan",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        container: "backdrop-blur-sm bg-black/30",
+        popup: "rounded-2xl shadow-2xl font-sans",
+        title: "text-brand-dark font-bold text-lg",
+        confirmButton: !isActive
+          ? "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl ml-2 shadow-md transition-all"
+          : "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-xl ml-2 shadow-md transition-all",
+        cancelButton:
+          "bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-xl shadow-sm transition-all",
+      },
+    });
+
+    if (result.isConfirmed) {
       setLoading(true);
       try {
         await axios.put(
-          "http://localhost:3001/api/driver-app/status",
-          {
-            status: newStatus,
-          },
-          {
-            headers: { Authorization: `Bearer ${getAuthToken()}` },
-          }
+          "http://192.168.100.17:3001/api/driver-app/status",
+          { status: newStatus },
+          { headers: { Authorization: `Bearer ${getAuthToken()}` } }
         );
 
         setIsActive(!isActive);
         if (newStatus === "Aktif") {
           startTracking();
+          toast.success("Anda ONLINE");
         } else {
           stopTracking();
+          toast.info("Anda OFFLINE");
         }
       } catch (err) {
-        alert(
+        toast.error(
           "Gagal mengubah status: " +
             (err.response?.data?.message || err.message)
         );
@@ -176,17 +192,15 @@ function DriverAktivasi() {
     const newCapacity = !isFull ? "Penuh" : "Tersedia";
     try {
       await axios.put(
-        "http://localhost:3001/api/driver-app/capacity",
-        {
-          status_penumpang: newCapacity,
-        },
-        {
-          headers: { Authorization: `Bearer ${getAuthToken()}` },
-        }
+        "http://192.168.100.17:3001/api/driver-app/capacity",
+        { status_penumpang: newCapacity },
+        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
       );
       setIsFull(!isFull);
+      if (!isFull) toast.warn("Status Bus: PENUH");
+      else toast.success("Status Bus: TERSEDIA");
     } catch (err) {
-      alert("Gagal update kapasitas.");
+      toast.error("Gagal update kapasitas.");
     }
   };
 
@@ -196,7 +210,7 @@ function DriverAktivasi() {
       <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
         <button
           onClick={() => navigate(-1)}
-          className="bg-white p-3 rounded-full shadow-lg text-gray-700 pointer-events-auto active:scale-95 transition-transform hover:bg-gray-50"
+          className="bg-white p-3 rounded-full shadow-lg text-brand-dark pointer-events-auto active:scale-95 transition-transform hover:bg-gray-50 border border-gray-100"
         >
           <ArrowLeftIcon className="h-6 w-6" />
         </button>
@@ -207,13 +221,13 @@ function DriverAktivasi() {
         <MapContainer
           center={position}
           zoom={16}
-          zoomControl={false} // Hilangkan zoom control default biar bersih
+          zoomControl={false}
           scrollWheelZoom={true}
           className="h-full w-full"
           style={{ zIndex: 0 }}
         >
           <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
+            attribution="&copy; OpenStreetMap"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
@@ -221,11 +235,11 @@ function DriverAktivasi() {
           <Marker position={position} icon={createBusIcon()}>
             <Popup className="custom-popup">
               <div className="text-center">
-                <p className="font-bold text-brand-accent text-sm">
+                <p className="font-bold text-brand-primary text-sm">
                   Lokasi Anda
                 </p>
                 <p className="text-[10px] text-gray-500">
-                  {isActive ? "Live GPS ON" : "Live GPS OFF"}
+                  {isActive ? "🟢 Live GPS ON" : "🔴 Live GPS OFF"}
                 </p>
               </div>
             </Popup>
@@ -234,23 +248,23 @@ function DriverAktivasi() {
           <MapUpdater position={position} />
         </MapContainer>
 
-        {/* PANEL KONTROL (Disesuaikan posisinya ke top-20 agar tidak ketabrak tombol back) */}
+        {/* PANEL KONTROL (Floating) */}
         <div className="absolute top-20 left-4 right-4 flex flex-col gap-3 z-[500]">
           {/* 1. Kartu Status GPS */}
-          <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center border border-white/50">
+          <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl flex justify-between items-center border border-white/50 animate-fade-in-down">
             <div>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                 Status Layanan
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <span
-                  className={`flex h-3 w-3 rounded-full ${
+                  className={`flex h-3 w-3 rounded-full shadow-sm ${
                     isActive ? "bg-green-500 animate-pulse" : "bg-red-500"
                   }`}
                 ></span>
                 <h2
-                  className={`text-lg font-bold ${
-                    isActive ? "text-green-600" : "text-gray-700"
+                  className={`text-xl font-extrabold tracking-tight ${
+                    isActive ? "text-green-600" : "text-gray-600"
                   }`}
                 >
                   {isActive ? "ONLINE" : "OFFLINE"}
@@ -263,8 +277,8 @@ function DriverAktivasi() {
               disabled={loading}
               className={`flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all transform active:scale-95 ${
                 isActive
-                  ? "bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100"
-                  : "bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100"
+                  ? "bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100"
+                  : "bg-green-50 text-green-600 border-2 border-green-100 hover:bg-green-100"
               }`}
             >
               {loading ? (
@@ -279,34 +293,34 @@ function DriverAktivasi() {
 
           {/* 2. Kartu Status Kapasitas */}
           {isActive && (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center animate-fade-in-down border border-white/50">
+            <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl flex justify-between items-center animate-fade-in-up border border-white/50">
               <div>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                  Kapasitas Penumpang
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                  Kapasitas Bus
                 </p>
                 <h2
-                  className={`text-sm font-bold ${
-                    isFull ? "text-red-600" : "text-brand-accent"
+                  className={`text-sm font-bold mt-1 ${
+                    isFull ? "text-red-600" : "text-brand-primary"
                   }`}
                 >
-                  {isFull ? "BUS PENUH" : "TERSEDIA"}
+                  {isFull ? "BUS PENUH ⚠️" : "TERSEDIA ✅"}
                 </h2>
               </div>
               <button
                 onClick={handleToggleCapacity}
-                className={`w-auto px-4 h-10 flex items-center justify-center rounded-lg shadow-md transition-all text-xs font-bold gap-2 ${
+                className={`w-auto px-4 h-10 flex items-center justify-center rounded-lg shadow-sm transition-all text-xs font-bold gap-2 ${
                   isFull
-                    ? "bg-brand-primary/10 text-brand-accent hover:bg-brand-dark"
-                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                    ? "bg-brand-primary text-white hover:bg-brand-dark"
+                    : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100"
                 }`}
               >
                 {isFull ? (
                   <>
-                    <FaUsers className="w-4 h-4" /> Buka
+                    <FaUsers className="w-4 h-4" /> Buka Kursi
                   </>
                 ) : (
                   <>
-                    <FaUsersSlash className="w-4 h-4" /> Penuhkan
+                    <FaUsersSlash className="w-4 h-4" /> Set Penuh
                   </>
                 )}
               </button>

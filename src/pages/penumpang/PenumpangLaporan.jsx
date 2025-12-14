@@ -1,9 +1,10 @@
-// src/pages/penumpang/PenumpangLaporan.jsx (TEMA BARU)
+// src/pages/penumpang/PenumpangLaporan.jsx (FINAL CLEAN + TOASTIFY)
 
 import React, { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import BottomNav from "../../components/BottomNav";
 
 function PenumpangLaporan() {
@@ -14,37 +15,40 @@ function PenumpangLaporan() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!subjek || !deskripsi) {
-      alert("Mohon isi semua kolom.");
+
+    // Validasi
+    if (!subjek.trim() || !deskripsi.trim()) {
+      toast.warn("Mohon isi semua kolom laporan!");
       return;
     }
+
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:3001/api/penumpang/laporan",
-        {
-          subjek,
-          deskripsi,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        "http://192.168.100.17:3001/api/penumpang/laporan",
+        { subjek, deskripsi },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Laporan berhasil dikirim! Terima kasih atas masukan Anda.");
+
+      // Notif Sukses
+      toast.success("Laporan terkirim! Terima kasih atas masukan Anda.");
+
+      // Reset Form
       setSubjek("");
       setDeskripsi("");
     } catch (err) {
       console.error("Gagal kirim laporan", err);
-      alert("Gagal mengirim laporan. Silakan coba lagi.");
+      // Notif Gagal
+      const msg = err.response?.data?.message || "Gagal mengirim laporan.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // GANTI bg-gray-50 JADI bg-brand-cream
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream text-brand-dark">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream text-brand-dark font-sans">
       {/* Header */}
       <header className="flex items-center p-4 bg-white/50 backdrop-blur-md shadow-sm z-10 sticky top-0 border-b border-brand-primary/10">
         <button
@@ -61,7 +65,7 @@ function PenumpangLaporan() {
 
       {/* Konten Utama */}
       <main className="flex-grow overflow-y-auto p-4 pb-20">
-        <div className="bg-white shadow-md rounded-2xl p-6 border border-brand-primary/10">
+        <div className="bg-white shadow-md rounded-2xl p-6 border border-brand-primary/10 animate-fade-in-up">
           <h2 className="text-lg font-bold text-brand-primary mb-2">
             Punya Kendala?
           </h2>
@@ -104,7 +108,7 @@ function PenumpangLaporan() {
                 value={deskripsi}
                 onChange={(e) => setDeskripsi(e.target.value)}
                 placeholder="Jelaskan detail kejadian, nomor bus (jika ada), dan lokasi..."
-                className="w-full px-4 py-3 bg-brand-cream/30 border border-brand-primary/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all placeholder-brand-dark/30 text-brand-dark"
+                className="w-full px-4 py-3 bg-brand-cream/30 border border-brand-primary/20 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all placeholder-brand-dark/30 text-brand-dark resize-none"
                 required
               ></textarea>
             </div>

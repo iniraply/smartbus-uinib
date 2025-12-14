@@ -19,7 +19,7 @@ function AdminLaporan() {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://localhost:3001/api/admin/laporan",
+        "http://192.168.100.17:3001/api/admin/laporan",
         config
       );
       setLaporanList(res.data);
@@ -70,7 +70,7 @@ function AdminLaporan() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:3001/api/admin/laporan/${id}`,
+          `http://192.168.100.17:3001/api/admin/laporan/${id}`,
           config
         );
 
