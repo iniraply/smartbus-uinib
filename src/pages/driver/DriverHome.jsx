@@ -58,31 +58,31 @@ function DriverHome() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream">
       {/* Konten Utama (Tanpa Header Atas) */}
       <main className="flex-grow overflow-y-auto pb-20 p-4 space-y-5 pt-8">
         {/* Kartu 1: Info Driver & Unit */}
-        <div className="bg-white shadow-md rounded-2xl p-6 text-center border border-blue-50 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+        <div className="bg-white shadow-md rounded-2xl p-6 text-center border border-brand-accent relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-brand-accent"></div>
 
-          <div className="bg-blue-50 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3">
-            <FaIdBadge className="h-8 w-8 text-blue-600" />
+          <div className="bg-white w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3">
+            <FaIdBadge className="h-8 w-8 text-brand-accent" />
           </div>
 
-          <h1 className="text-xl font-bold text-gray-800">
+          <h1 className="text-xl font-bold text-brand-dark">
             Halo, {driverName}
           </h1>
           <p className="text-gray-500 text-sm mb-4">Selamat Bertugas!</p>
 
           {/* Info Bus yang Ditugaskan */}
           {busInfo ? (
-            <div className="bg-blue-50 rounded-xl p-3 inline-flex items-center gap-3 border border-blue-100">
-              <FaBus className="text-blue-500" />
+            <div className="bg-white rounded-xl p-3 inline-flex items-center gap-3 border border-brand-accent">
+              <FaBus className="text-brand-accent" />
               <div className="text-left">
                 <p className="text-xs text-gray-500 uppercase font-bold">
                   Unit Anda
                 </p>
-                <p className="text-sm font-bold text-blue-800">
+                <p className="text-sm font-bold text-brand-primary">
                   {busInfo.nama_bus}
                 </p>
               </div>
@@ -90,7 +90,7 @@ function DriverHome() {
                 className={`text-[10px] px-2 py-0.5 rounded-full border ${
                   busInfo.status_bus === "Aktif"
                     ? "bg-green-100 text-green-700 border-green-200"
-                    : "bg-gray-100 text-gray-600 border-gray-200"
+                    : "bg-brand-cream text-gray-600 border-gray-200"
                 }`}
               >
                 {busInfo.status_bus}
@@ -106,10 +106,10 @@ function DriverHome() {
         </div>
 
         {/* Kartu 2: Jadwal Tugas (Dinamis) */}
-        <div className="bg-white shadow-md rounded-2xl p-5 border-l-4 border-blue-600">
+        <div className="bg-white shadow-md rounded-2xl p-5 border-l-4 border-brand-accent">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-bold text-lg text-gray-800">Jadwal Tugas</h2>
-            <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500">
+            <h2 className="font-bold text-lg text-brand-dark">Jadwal Tugas</h2>
+            <span className="text-[10px] bg-brand-cream px-2 py-1 rounded text-gray-500">
               {today}
             </span>
           </div>
@@ -117,8 +117,8 @@ function DriverHome() {
           <div className="space-y-3 mb-4">
             {loading ? (
               <>
-                <div className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
-                <div className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                <div className="h-12 bg-brand-cream rounded-lg animate-pulse"></div>
+                <div className="h-12 bg-brand-cream rounded-lg animate-pulse"></div>
               </>
             ) : jadwal.length > 0 ? (
               jadwal.map((item, idx) => (
@@ -127,9 +127,9 @@ function DriverHome() {
                   className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100"
                 >
                   <div className="flex items-center gap-3">
-                    <FaClock className="text-blue-500" />
+                    <FaClock className="text-brand-accent" />
                     <div>
-                      <p className="font-bold text-gray-800 text-sm">
+                      <p className="font-bold text-brand-dark text-sm">
                         {item.waktu.substring(0, 5)} WIB
                       </p>
                       <p className="text-xs text-gray-500">Keberangkatan</p>
@@ -153,17 +153,17 @@ function DriverHome() {
           </div>
 
           <button
-            onClick={() => navigate("/driver/jadwal")}
-            className="w-full text-blue-600 text-sm font-semibold hover:underline"
+            onClick={() => navigate("/penumpang/jadwal")}
+            className="w-full bg-brand-accent text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm hover:bg-brand-dark transition-all text-sm"
           >
-            Lihat Detail Jadwal →
+            Lihat Jadwal Lengkap
           </button>
         </div>
 
         {/* Kartu 3: Shortcut Aktivasi (Visual) */}
         <div className="bg-white shadow-md rounded-2xl p-0 overflow-hidden relative group">
           {/* Background Pattern */}
-          <div className="h-28 bg-gray-800 relative flex items-center justify-center">
+          <div className="h-28 bg-brand-dark relative flex items-center justify-center">
             <div
               className="absolute inset-0 opacity-10"
               style={{
@@ -185,7 +185,7 @@ function DriverHome() {
           <div className="p-4">
             <button
               onClick={() => navigate("/driver/aktivasi")}
-              className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-brand-accent text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:bg-brand-dark transition-all flex items-center justify-center gap-2"
             >
               {" "}
               Buka Menu Aktivasi

@@ -102,13 +102,16 @@ function ProfilDriver() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream">
       {/* Header */}
-      <header className="flex items-center p-4 bg-white shadow-md z-10 sticky top-0">
-        <button onClick={() => navigate(-1)} className="text-gray-700">
+      <header className="flex items-center p-4 bg-white/50 backdrop-blur-md shadow-sm z-10 sticky top-0 border-b border-brand-primary/10">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-brand-dark hover:text-brand-primary transition-colors"
+        >
           <ArrowLeftIcon className="h-6 w-6" />
         </button>
-        <h1 className="text-xl font-semibold text-center flex-grow">
+        <h1 className="text-xl font-bold text-center flex-grow text-brand-dark">
           Profil Driver
         </h1>
         <div className="w-6"></div>
@@ -117,8 +120,8 @@ function ProfilDriver() {
       {/* Konten Profil */}
       <main className="flex-grow p-4 space-y-4">
         <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
-          <div className="bg-blue-100 p-4 rounded-full mb-4">
-            <UserCircleIcon className="h-20 w-20 text-blue-600" />
+          <div className="bg-brand-primary/10 p-4 rounded-full mb-4">
+            <UserCircleIcon className="h-20 w-20 text-brand-accent" />
           </div>
 
           <div className="w-full space-y-3 text-left">
@@ -126,7 +129,7 @@ function ProfilDriver() {
               <label className="text-xs font-bold text-gray-400 uppercase">
                 Username
               </label>
-              <p className="text-lg font-semibold text-gray-800">
+              <p className="text-lg font-semibold text-brand-dark">
                 {user.username}
               </p>
             </div>
@@ -134,7 +137,7 @@ function ProfilDriver() {
               <label className="text-xs font-bold text-gray-400 uppercase">
                 Email
               </label>
-              <p className="text-lg font-semibold text-gray-800">
+              <p className="text-lg font-semibold text-brand-dark">
                 {user.email}
               </p>
             </div>
@@ -142,7 +145,7 @@ function ProfilDriver() {
               <label className="text-xs font-bold text-gray-400 uppercase">
                 Peran
               </label>
-              <p className="text-lg font-semibold text-blue-600">
+              <p className="text-lg font-semibold text-brand-accent">
                 Pengemudi Bus
               </p>
             </div>
@@ -150,7 +153,7 @@ function ProfilDriver() {
 
           <button
             onClick={handleEditClick}
-            className="mt-6 w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors"
+            className="mt-6 w-full bg-brand-accent text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-brand-dark transition-colors"
           >
             Edit Profil
           </button>
@@ -170,7 +173,7 @@ function ProfilDriver() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-100">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-bold text-gray-800">
+              <h3 className="text-lg font-bold text-brand-dark">
                 Edit Data Diri
               </h3>
               <button onClick={() => setShowModal(false)}>
@@ -187,7 +190,7 @@ function ProfilDriver() {
                   name="username"
                   value={formData.username}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
                 />
               </div>
               <div>
@@ -199,7 +202,7 @@ function ProfilDriver() {
                   name="email"
                   value={formData.email}
                   onChange={onModalChange}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
                 />
               </div>
               <div>
@@ -212,7 +215,7 @@ function ProfilDriver() {
                   value={formData.password}
                   onChange={onModalChange}
                   placeholder="Kosongkan jika tidak diganti"
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent outline-none transition-all"
                 />
               </div>
 
@@ -226,14 +229,14 @@ function ProfilDriver() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 font-medium bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-gray-700 font-medium bg-brand-cream rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 text-white font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors shadow-md"
+                  className="px-4 py-2 text-white font-medium bg-brand-accent rounded-lg hover:bg-brand-dark disabled:bg-gray-400 transition-colors shadow-md"
                 >
                   {loading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>

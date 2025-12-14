@@ -31,9 +31,9 @@ L.Icon.Default.mergeOptions({
 const createBusIcon = () => {
   const iconMarkup = renderToStaticMarkup(
     <div className="relative flex items-center justify-center w-10 h-10">
-      <div className="absolute w-10 h-10 bg-blue-600 rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
+      <div className="absolute w-10 h-10 bg-brand-accent rounded-full border-2 border-white shadow-lg opacity-90 animate-pulse"></div>
       <FaBus className="relative z-10 text-white w-5 h-5" />
-      <div className="absolute -bottom-1 w-3 h-3 bg-blue-600 rotate-45 border-b-2 border-r-2 border-white"></div>
+      <div className="absolute -bottom-1 w-3 h-3 bg-brand-accent rotate-45 border-b-2 border-r-2 border-white"></div>
     </div>
   );
   return L.divIcon({
@@ -191,7 +191,7 @@ function DriverAktivasi() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-gray-100 relative">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream relative">
       {/* HEADER BARU: Floating Back Button */}
       <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
         <button
@@ -221,7 +221,9 @@ function DriverAktivasi() {
           <Marker position={position} icon={createBusIcon()}>
             <Popup className="custom-popup">
               <div className="text-center">
-                <p className="font-bold text-blue-600 text-sm">Lokasi Anda</p>
+                <p className="font-bold text-brand-accent text-sm">
+                  Lokasi Anda
+                </p>
                 <p className="text-[10px] text-gray-500">
                   {isActive ? "Live GPS ON" : "Live GPS OFF"}
                 </p>
@@ -284,7 +286,7 @@ function DriverAktivasi() {
                 </p>
                 <h2
                   className={`text-sm font-bold ${
-                    isFull ? "text-red-600" : "text-blue-600"
+                    isFull ? "text-red-600" : "text-brand-accent"
                   }`}
                 >
                   {isFull ? "BUS PENUH" : "TERSEDIA"}
@@ -294,7 +296,7 @@ function DriverAktivasi() {
                 onClick={handleToggleCapacity}
                 className={`w-auto px-4 h-10 flex items-center justify-center rounded-lg shadow-md transition-all text-xs font-bold gap-2 ${
                   isFull
-                    ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                    ? "bg-brand-primary/10 text-brand-accent hover:bg-brand-dark"
                     : "bg-red-100 text-red-600 hover:bg-red-200"
                 }`}
               >
