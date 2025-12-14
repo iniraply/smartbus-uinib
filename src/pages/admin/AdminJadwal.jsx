@@ -1,46 +1,57 @@
-// src/pages/admin/AdminJadwal.jsx
+// src/pages/admin/AdminJadwal.jsx (TEMA BARU)
+
 import React, { useState, useEffect } from "react";
-import SidebarAdmin from "../../components/SidebarAdmin";
 import axios from "axios";
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+  FaCalendarAlt,
+  FaTrash,
+  FaPlus,
+  FaEdit,
+  FaClock,
+  FaBus,
+} from "react-icons/fa";
+import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminJadwal() {
   const [jadwalList, setJadwalList] = useState([]);
-  const [bus, setBus] = useState([]); // <-- State baru untuk daftar bus
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [formData, setFormData] = useState({
-    bus_id: "",
-    tujuan: "",
-    waktu: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [busList, setBusList] = useState([]); // Untuk dropdown
 
+  // State Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // State Data
+  const [newData, setNewData] = useState({ id_bus: "", waktu: "", tujuan: "" });
+  const [editData, setEditData] = useState({
+    id_jadwal: "",
+    id_bus: "",
+    waktu: "",
+    tujuan: "",
+  });
+
+  const [loading, setLoading] = useState(false);
   const getAuthToken = () => localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
 
-  // --- 1. FUNGSI READ (GET ALL JADWAL & BUS) ---
+  // --- FETCH DATA ---
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Panggil 2 API sekaligus
-      const [jadwalRes, busRes] = await Promise.all([
-        axios.get("http://localhost:3001/api/admin/jadwal", config),
-        axios.get("http://localhost:3001/api/admin/bus", config),
-      ]);
-      setJadwalList(jadwalRes.data);
-      setBus(busRes.data);
-    } catch (err) {
-      setError(
-        "Gagal mengambil data. " + (err.response?.data?.message || err.message)
+      // Ambil Data Jadwal
+      const resJadwal = await axios.get(
+        "http://localhost:3001/api/admin/jadwal",
+        config
       );
+      setJadwalList(resJadwal.data);
+
+      // Ambil Data Bus (untuk dropdown)
+      const resBus = await axios.get(
+        "http://localhost:3001/api/admin/bus",
+        config
+      );
+      setBusList(resBus.data);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -50,241 +61,290 @@ function AdminJadwal() {
     fetchData();
   }, []);
 
-  // --- 2. FUNGSI UNTUK MODAL ---
-  const handleOpenModal = (data = null) => {
-    setError("");
-    if (data) {
-      // Mode Edit
-      setIsEditing(true);
-      setCurrentId(data.id_jadwal);
-      setFormData({
-        bus_id: data.id_bus,
-        tujuan: data.tujuan,
-        waktu: data.waktu,
-      });
-    } else {
-      // Mode Tambah
-      setIsEditing(false);
-      setCurrentId(null);
-      setFormData({ bus_id: "", tujuan: "", waktu: "" });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  // --- 3. FUNGSI CREATE & UPDATE (SUBMIT MODAL) ---
-  const handleSubmit = async (e) => {
+  // --- HANDLERS ---
+  const handleAdd = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    // Validasi form tidak kosong
-    if (!formData.bus_id || !formData.tujuan || !formData.waktu) {
-      setError("Semua field wajib diisi.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      if (isEditing) {
-        // UPDATE (PUT)
-        await axios.put(
-          `http://localhost:3001/api/admin/jadwal/${currentId}`,
-          formData,
-          config
-        );
-        alert("Jadwal berhasil diperbarui!");
-      } else {
-        // CREATE (POST)
-        await axios.post(
-          "http://localhost:3001/api/admin/jadwal",
-          formData,
-          config
-        );
-        alert("Jadwal berhasil ditambahkan!");
-      }
-      handleCloseModal();
-      fetchData(); // Muat ulang data
+      await axios.post(
+        "http://localhost:3001/api/admin/jadwal",
+        newData,
+        config
+      );
+      alert("Jadwal berhasil ditambahkan!");
+      setShowAddModal(false);
+      setNewData({ id_bus: "", waktu: "", tujuan: "" });
+      fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+      const msg = err.response?.data?.message || err.message;
+      alert(`Gagal tambah jadwal: ${msg}`);
     }
   };
 
-  // --- 4. FUNGSI DELETE (HAPUS JADWAL) ---
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/jadwal/${editData.id_jadwal}`,
+        editData,
+        config
+      );
+      alert("Jadwal berhasil diperbarui!");
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      alert(`Gagal update jadwal: ${msg}`);
+    }
+  };
+
   const handleDelete = async (id) => {
-    if (window.confirm("Anda yakin ingin menghapus jadwal ini?")) {
-      setLoading(true);
-      setError("");
+    if (window.confirm("Yakin hapus jadwal ini?")) {
       try {
         await axios.delete(
           `http://localhost:3001/api/admin/jadwal/${id}`,
           config
         );
-        alert("Jadwal berhasil dihapus.");
-        fetchData(); // Muat ulang data
+        fetchData();
       } catch (err) {
-        setError(err.response?.data?.message || "Gagal menghapus jadwal.");
-      } finally {
-        setLoading(false);
+        alert("Gagal hapus jadwal");
       }
     }
   };
 
-  return (
-    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
-      <SidebarAdmin />
+  const openEdit = (item) => {
+    setEditData({
+      id_jadwal: item.id_jadwal,
+      id_bus: item.id_bus,
+      waktu: item.waktu,
+      tujuan: item.tujuan || item.rute, // Sesuaikan dengan nama kolom di DB
+    });
+    setShowEditModal(true);
+  };
 
-      <main className="flex-grow p-8 bg-gray-100">
+  return (
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
+      <SidebarAdmin />
+      <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Jadwal Operasional</h1>
+          <h1 className="text-3xl font-bold text-brand-primary">
+            Kelola Jadwal Operasional
+          </h1>
           <button
-            onClick={() => handleOpenModal(null)}
-            className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700"
+            onClick={() => setShowAddModal(true)}
+            className="bg-brand-primary hover:bg-brand-dark text-brand-cream px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-all"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Tambah Jadwal
+            <FaPlus /> Tambah Jadwal
           </button>
         </div>
 
-        {error && !isModalOpen && <p className="text-red-500 mb-4">{error}</p>}
-        {loading && <p>Loading...</p>}
-
-        {/* Tabel Data Jadwal */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-brand-primary text-brand-cream">
               <tr>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  No
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Nama Bus
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Tujuan
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Waktu Keberangkatan
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Aksi
-                </th>
+                <th className="p-4 font-semibold">Waktu Berangkat</th>
+                <th className="p-4 font-semibold">Unit Bus</th>
+                <th className="p-4 font-semibold">Tujuan / Rute</th>
+                <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {jadwalList.map((data, index) => (
-                <tr key={data.id_jadwal} className="hover:bg-gray-50">
-                  <td className="py-4 px-6">{index + 1}</td>
-                  <td className="py-4 px-6 font-medium">{data.nama_bus}</td>
-                  <td className="py-4 px-6">{data.tujuan}</td>
-                  <td className="py-4 px-6">{data.waktu}</td>
-                  <td className="py-4 px-6 flex space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(data)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(data.id_jadwal)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Hapus"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+            <tbody className="divide-y divide-brand-primary/10">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="p-4 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : jadwalList.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="p-4 text-center italic text-gray-500"
+                  >
+                    Belum ada jadwal.
+                  </td>
+                </tr>
+              ) : (
+                jadwalList.map((item) => (
+                  <tr
+                    key={item.id_jadwal}
+                    className="hover:bg-brand-cream/30 transition-colors"
+                  >
+                    <td className="p-4 font-bold text-brand-primary flex items-center gap-2">
+                      <FaClock />{" "}
+                      {item.waktu ? item.waktu.substring(0, 5) : "-"} WIB
+                    </td>
+                    <td className="p-4 font-medium">
+                      <span className="flex items-center gap-2 bg-brand-primary/10 px-3 py-1 rounded-full w-fit text-sm">
+                        <FaBus className="text-brand-primary" /> {item.nama_bus}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm">{item.tujuan || item.rute}</td>
+                    <td className="p-4 text-center flex justify-center gap-2">
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id_jadwal)}
+                        className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </main>
 
-      {/* --- MODAL TAMBAH/EDIT DATA --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold">
-                {isEditing ? "Edit Jadwal" : "Tambah Jadwal"}
-              </h3>
-              <button onClick={handleCloseModal}>
-                <XMarkIcon className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* --- DROPDOWN BUS --- */}
+      {/* --- MODAL TAMBAH --- */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
+            <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
+              <FaPlus /> Tambah Jadwal
+            </h2>
+            <form onSubmit={handleAdd} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nama Bus
+                <label className="text-xs font-bold text-brand-dark">
+                  Pilih Bus
                 </label>
                 <select
-                  value={formData.bus_id}
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                  value={newData.id_bus}
                   onChange={(e) =>
-                    setFormData({ ...formData, bus_id: e.target.value })
+                    setNewData({ ...newData, id_bus: e.target.value })
                   }
-                  className="w-full px-3 py-2 border rounded-md"
                   required
                 >
-                  <option value="">-- Pilih Bus --</option>
-                  {bus.map((bus) => (
+                  <option value="">-- Pilih Unit Bus --</option>
+                  {busList.map((bus) => (
+                    <option key={bus.id_bus} value={bus.id_bus}>
+                      {bus.nama_bus} ({bus.plat_nomor || "No Plat"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Waktu Keberangkatan
+                </label>
+                <input
+                  type="time"
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                  value={newData.waktu}
+                  onChange={(e) =>
+                    setNewData({ ...newData, waktu: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Tujuan / Rute
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                  placeholder="Contoh: Kampus 2 ke Kampus 3"
+                  value={newData.tujuan}
+                  onChange={(e) =>
+                    setNewData({ ...newData, tujuan: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow"
+                >
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDIT --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-accent">
+            <h2 className="text-xl font-bold text-brand-accent mb-4 flex items-center gap-2">
+              <FaEdit /> Edit Jadwal
+            </h2>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Pilih Bus
+                </label>
+                <select
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.id_bus}
+                  onChange={(e) =>
+                    setEditData({ ...editData, id_bus: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">-- Pilih Unit Bus --</option>
+                  {busList.map((bus) => (
                     <option key={bus.id_bus} value={bus.id_bus}>
                       {bus.nama_bus}
                     </option>
                   ))}
                 </select>
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-1">Tujuan</label>
-                <input
-                  type="text"
-                  value={formData.tujuan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tujuan: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Waktu Keberangkatan
+                <label className="text-xs font-bold text-brand-dark">
+                  Waktu
                 </label>
                 <input
-                  type="time" // Tipe 'time' untuk jam
-                  value={formData.waktu}
+                  type="time"
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.waktu}
                   onChange={(e) =>
-                    setFormData({ ...formData, waktu: e.target.value })
+                    setEditData({ ...editData, waktu: e.target.value })
                   }
-                  className="w-full px-3 py-2 border rounded-md"
                   required
                 />
               </div>
-
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4">
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Tujuan
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.tujuan}
+                  onChange={(e) =>
+                    setEditData({ ...editData, tujuan: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg disabled:bg-gray-400"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow"
                 >
-                  {loading ? "Menyimpan..." : "Simpan"}
+                  Update
                 </button>
               </div>
             </form>

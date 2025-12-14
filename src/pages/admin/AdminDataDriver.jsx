@@ -1,292 +1,334 @@
-// src/pages/admin/AdminDataDriver.jsx
+// src/pages/admin/AdminDataDriver.jsx (TEMA BARU)
+
 import React, { useState, useEffect } from "react";
-import SidebarAdmin from "../../components/SidebarAdmin";
 import axios from "axios";
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { FaUserTie, FaTrash, FaPlus, FaEdit, FaEnvelope } from "react-icons/fa";
+import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminDataDriver() {
   const [drivers, setDrivers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentDriverId, setCurrentDriverId] = useState(null);
-  const [formData, setFormData] = useState({
+
+  // State Modal Tambah
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newDriver, setNewDriver] = useState({
     nama: "",
     email: "",
     password: "",
   });
+
+  // State Modal Edit
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({
+    id: "",
+    nama: "",
+    email: "",
+    password: "",
+  });
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // --- Helper untuk API ---
   const getAuthToken = () => localStorage.getItem("token");
+  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
 
-  // --- 1. FUNGSI READ (GET ALL DRIVERS) ---
+  // --- FETCH DATA ---
   const fetchDrivers = async () => {
     setLoading(true);
     try {
-      const token = getAuthToken();
-      const res = await axios.get("http://localhost:3001/api/admin/drivers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "http://localhost:3001/api/admin/drivers",
+        config
+      );
       setDrivers(res.data);
     } catch (err) {
-      setError(
-        "Gagal mengambil data driver. " +
-          (err.response?.data?.message || err.message)
-      );
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Ambil data saat halaman dimuat
   useEffect(() => {
     fetchDrivers();
   }, []);
 
-  // --- 2. FUNGSI UNTUK MODAL ---
-  const handleOpenModal = (driver = null) => {
-    setError("");
-    if (driver) {
-      // Mode Edit
-      setIsEditing(true);
-      setCurrentDriverId(driver.id_user);
-      setFormData({
-        nama: driver.nama,
-        email: driver.email,
-        password: "", // Kosongkan password saat edit
-      });
-    } else {
-      // Mode Tambah
-      setIsEditing(false);
-      setCurrentDriverId(null);
-      setFormData({ nama: "", email: "", password: "" });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setIsEditing(false);
-    setCurrentDriverId(null);
-  };
-
-  // --- 3. FUNGSI CREATE & UPDATE (SUBMIT MODAL) ---
-  const handleSubmit = async (e) => {
+  // --- HANDLER TAMBAH ---
+  const handleAddDriver = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const token = getAuthToken();
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    // Siapkan data, hapus password jika kosong (saat edit)
-    const dataToSubmit = { ...formData };
-    if (isEditing && !dataToSubmit.password) {
-      delete dataToSubmit.password;
-    }
-
     try {
-      if (isEditing) {
-        // UPDATE (PUT)
-        await axios.put(
-          `http://localhost:3001/api/admin/drivers/${currentDriverId}`,
-          dataToSubmit,
-          config
-        );
-        alert("Driver berhasil diperbarui!");
-      } else {
-        // CREATE (POST)
-        await axios.post(
-          "http://localhost:3001/api/admin/drivers",
-          dataToSubmit,
-          config
-        );
-        alert("Driver berhasil ditambahkan!");
-      }
-
-      handleCloseModal();
-      fetchDrivers(); // Muat ulang data tabel
+      await axios.post(
+        "http://localhost:3001/api/admin/drivers",
+        newDriver,
+        config
+      );
+      alert("Driver berhasil ditambahkan!");
+      setShowAddModal(false);
+      setNewDriver({ nama: "", email: "", password: "" });
+      fetchDrivers();
     } catch (err) {
-      setError(err.response?.data?.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+      const pesan = err.response?.data?.message || err.message;
+      alert(`Gagal tambah driver: ${pesan}`);
     }
   };
 
-  // --- 4. FUNGSI DELETE (HAPUS DRIVER) ---
-  const handleDelete = async (driverId) => {
-    if (window.confirm("Anda yakin ingin menghapus driver ini?")) {
-      setLoading(true);
-      setError("");
+  // --- HANDLER EDIT ---
+  const openEditModal = (driver) => {
+    // Mapping id_user ke id
+    setEditData({
+      id: driver.id_user || driver.id,
+      nama: driver.nama,
+      email: driver.email,
+      password: "", // Kosongkan password saat edit (opsional diisi)
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateDriver = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/drivers/${editData.id}`,
+        editData,
+        config
+      );
+      alert("Data driver berhasil diperbarui!");
+      setShowEditModal(false);
+      fetchDrivers();
+    } catch (err) {
+      const pesan = err.response?.data?.message || err.message;
+      alert(`Gagal update driver: ${pesan}`);
+    }
+  };
+
+  // --- HANDLER DELETE (DEBUG VERSION) ---
+  const handleDelete = async (id) => {
+    if (
+      window.confirm(
+        "Yakin hapus driver ini? Tindakan ini tidak bisa dibatalkan."
+      )
+    ) {
       try {
-        const token = getAuthToken();
         await axios.delete(
-          `http://localhost:3001/api/admin/drivers/${driverId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `http://localhost:3001/api/admin/drivers/${id}`,
+          config
         );
-        alert("Driver berhasil dihapus.");
-        fetchDrivers(); // Muat ulang data tabel
+        alert("Driver berhasil dihapus."); // Beri notif sukses
+        fetchDrivers();
       } catch (err) {
-        setError(err.response?.data?.message || "Gagal menghapus driver.");
-      } finally {
-        setLoading(false);
+        console.error("Error Hapus:", err);
+        // Tampilkan pesan error spesifik dari backend
+        const pesan = err.response?.data?.message || err.message;
+        alert(`Gagal hapus driver: ${pesan}`);
       }
     }
   };
 
   return (
-    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
 
-      {/* Konten Utama */}
-      <main className="flex-grow p-8 bg-gray-100">
+      <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Data Driver</h1>
+          <h1 className="text-3xl font-bold text-brand-primary">
+            Kelola Data Driver
+          </h1>
           <button
-            onClick={() => handleOpenModal(null)}
-            className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700"
+            onClick={() => setShowAddModal(true)}
+            className="bg-brand-primary hover:bg-brand-dark text-brand-cream px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-all"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Tambah Driver
+            <FaPlus /> Tambah Driver
           </button>
         </div>
 
-        {/* Tampilkan Error Global */}
-        {error && !isModalOpen && <p className="text-red-500 mb-4">{error}</p>}
-        {loading && <p>Loading...</p>}
-
-        {/* Tabel Data Driver */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
+        {/* TABEL DRIVER */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-brand-primary text-brand-cream">
               <tr>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  No
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Nama Driver
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Email
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Aksi
-                </th>
+                <th className="p-4 font-semibold">Nama Driver</th>
+                <th className="p-4 font-semibold">Email</th>
+                <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {drivers.map((driver, index) => (
-                <tr key={driver.id_user} className="hover:bg-gray-50">
-                  <td className="py-4 px-6">{index + 1}</td>
-                  <td className="py-4 px-6 font-medium">{driver.nama}</td>
-                  <td className="py-4 px-6">{driver.email}</td>
-                  <td className="py-4 px-6 flex space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(driver)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(driver.id_user)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Hapus"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+            <tbody className="divide-y divide-brand-primary/10">
+              {loading ? (
+                <tr>
+                  <td colSpan="3" className="p-4 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : drivers.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="3"
+                    className="p-4 text-center italic text-gray-500"
+                  >
+                    Belum ada data driver.
+                  </td>
+                </tr>
+              ) : (
+                drivers.map((driver) => (
+                  <tr
+                    key={driver.id_user || driver.id}
+                    className="hover:bg-brand-cream/30 transition-colors"
+                  >
+                    <td className="p-4 font-bold flex items-center gap-3">
+                      <div className="bg-brand-primary/10 p-2 rounded-full text-brand-primary">
+                        <FaUserTie />
+                      </div>
+                      {driver.nama}
+                    </td>
+                    <td className="p-4 text-sm text-brand-dark/80">
+                      <div className="flex items-center gap-2">
+                        <FaEnvelope className="text-brand-primary/40" />{" "}
+                        {driver.email}
+                      </div>
+                    </td>
+                    <td className="p-4 text-center flex justify-center gap-2">
+                      <button
+                        onClick={() => openEditModal(driver)}
+                        className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                        title="Edit"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDelete(driver.id_user || driver.id)
+                        }
+                        className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                        title="Hapus"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </main>
 
-      {/* --- MODAL TAMBAH/EDIT DATA --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold">
-                {isEditing ? "Edit Data Driver" : "Tambah Data Driver"}
-              </h3>
-              <button onClick={handleCloseModal}>
-                <XMarkIcon className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
+      {/* --- MODAL TAMBAH --- */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
+            <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
+              <FaPlus /> Tambah Driver Baru
+            </h2>
+            <form onSubmit={handleAddDriver} className="space-y-4">
+              <input
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Nama Lengkap"
+                value={newDriver.nama}
+                onChange={(e) =>
+                  setNewDriver({ ...newDriver, nama: e.target.value })
+                }
+                required
+              />
+              <input
+                type="email"
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Email"
+                value={newDriver.email}
+                onChange={(e) =>
+                  setNewDriver({ ...newDriver, email: e.target.value })
+                }
+                required
+              />
+              <input
+                type="password"
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Password"
+                value={newDriver.password}
+                onChange={(e) =>
+                  setNewDriver({ ...newDriver, password: e.target.value })
+                }
+                required
+              />
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nama Driver
-                </label>
-                <input
-                  type="text"
-                  value={formData.nama}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder={
-                    isEditing ? "Isi untuk reset password" : "Wajib diisi"
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required={!isEditing} // Wajib hanya saat menambah
-                />
-              </div>
-
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg disabled:bg-gray-400"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-dark"
                 >
-                  {loading ? "Menyimpan..." : "Simpan"}
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDIT --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-accent">
+            <h2 className="text-xl font-bold text-brand-accent mb-4 flex items-center gap-2">
+              <FaEdit /> Edit Driver
+            </h2>
+            <form onSubmit={handleUpdateDriver} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Nama
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.nama}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nama: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.email}
+                  onChange={(e) =>
+                    setEditData({ ...editData, email: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Password Baru (Opsional)
+                </label>
+                <input
+                  type="password"
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  placeholder="Isi jika ingin mengganti password"
+                  value={editData.password}
+                  onChange={(e) =>
+                    setEditData({ ...editData, password: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow hover:bg-brand-dark"
+                >
+                  Update
                 </button>
               </div>
             </form>

@@ -1,8 +1,8 @@
-// src/pages/admin/AdminLaporan.jsx
+// src/pages/admin/AdminLaporan.jsx (TEMA BARU)
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { TrashIcon } from "@heroicons/react/24/solid";
-import SidebarAdmin from "../../components/SidebarAdmin"; // Impor Sidebar
+import { FaTrash, FaEnvelope, FaClipboardList } from "react-icons/fa"; // Menggunakan React Icons agar seragam dengan halaman lain
+import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminLaporan() {
   const [laporanList, setLaporanList] = useState([]);
@@ -53,63 +53,111 @@ function AdminLaporan() {
     }
   };
 
-  // Fungsi untuk format tanggal (opsional tapi bagus)
+  // Fungsi untuk format tanggal
   const formatDate = (dateString) => {
+    if (!dateString || dateString === "0000-00-00") return "-"; // Handle tanggal kosong
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
   return (
-    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
+    // 1. BACKGROUND KREM
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
 
-      <main className="flex-grow p-8 bg-gray-100 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">Laporan Penumpang</h1>
+      <main className="flex-grow p-8 ml-64">
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            {/* 2. JUDUL MAROON */}
+            <h1 className="text-3xl font-bold text-brand-primary">
+              Laporan Penumpang
+            </h1>
+            <p className="text-brand-dark/70 mt-1">
+              Daftar keluhan dan saran dari penumpang.
+            </p>
+          </div>
+          {/* Badge Jumlah Laporan */}
+          <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2">
+            <FaClipboardList />
+            <span className="font-bold">{laporanList.length} Laporan</span>
+          </div>
+        </header>
 
-        {loading && <p>Loading...</p>}
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {loading && (
+          <p className="text-center text-brand-dark/60">Loading...</p>
+        )}
+        {error && (
+          <p className="text-center text-red-600 font-bold mb-4">{error}</p>
+        )}
 
-        {/* --- Daftar Laporan --- */}
-        <div className="space-y-4">
-          {laporanList.length === 0 && !loading && (
-            <p className="text-gray-500">Belum ada laporan yang masuk.</p>
-          )}
+        {/* 3. KONTAINER TABEL PUTIH */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
+          <table className="w-full text-left border-collapse">
+            {/* 4. HEADER TABEL MAROON */}
+            <thead className="bg-brand-primary text-brand-cream">
+              <tr>
+                <th className="p-4 font-semibold w-1/4">Pengirim</th>
+                <th className="p-4 font-semibold w-1/4">Subjek</th>
+                <th className="p-4 font-semibold w-1/3">Isi Laporan</th>
+                <th className="p-4 font-semibold text-center w-24">Aksi</th>
+              </tr>
+            </thead>
 
-          {laporanList.map((laporan) => (
-            <div
-              key={laporan.id_laporan}
-              className="bg-white rounded-lg shadow p-5"
-            >
-              <div className="flex justify-between items-start">
-                {/* Info Laporan */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {laporan.subjek}
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Dari:{" "}
-                    <span className="font-medium text-gray-700">
-                      {laporan.nama_pelapor}
-                    </span>
-                    &nbsp;|&nbsp; Tanggal:{" "}
-                    <span className="font-medium text-gray-700">
-                      {formatDate(laporan.tanggal)}
-                    </span>
-                  </p>
-                  <p className="text-gray-700">{laporan.deskripsi}</p>
-                </div>
+            <tbody className="divide-y divide-brand-primary/10">
+              {laporanList.length === 0 && !loading ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="p-8 text-center text-gray-400 italic"
+                  >
+                    Belum ada laporan yang masuk.
+                  </td>
+                </tr>
+              ) : (
+                laporanList.map((laporan) => (
+                  // 5. BARIS TABEL DENGAN HOVER KREM
+                  <tr
+                    key={laporan.id_laporan}
+                    className="hover:bg-brand-cream/30 transition-colors align-top"
+                  >
+                    {/* Kolom Pengirim */}
+                    <td className="p-4">
+                      <div className="font-bold text-brand-primary flex items-center gap-2 mb-1">
+                        <FaEnvelope className="text-xs" />
+                        {laporan.nama_pelapor ||
+                          laporan.nama_penumpang ||
+                          "Anonim"}
+                      </div>
+                      <div className="text-xs text-brand-dark/60">
+                        {formatDate(laporan.tanggal || laporan.created_at)}
+                      </div>
+                    </td>
 
-                {/* Tombol Hapus */}
-                <button
-                  onClick={() => handleDelete(laporan.id_laporan)}
-                  className="text-red-500 hover:text-red-700 p-1"
-                  title="Hapus Laporan"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          ))}
+                    {/* Kolom Subjek */}
+                    <td className="p-4 font-bold text-brand-dark">
+                      {laporan.subjek}
+                    </td>
+
+                    {/* Kolom Isi */}
+                    <td className="p-4 text-sm text-gray-600 leading-relaxed">
+                      {laporan.deskripsi}
+                    </td>
+
+                    {/* Kolom Aksi */}
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleDelete(laporan.id_laporan)}
+                        className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition-all shadow-sm border border-red-200"
+                        title="Hapus Laporan"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </main>
     </div>

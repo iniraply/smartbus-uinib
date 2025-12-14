@@ -1,287 +1,290 @@
-// src/pages/admin/AdminDataPenumpang.jsx
+// src/pages/admin/AdminDataPenumpang.jsx (TEMA BARU)
+
 import React, { useState, useEffect } from "react";
-import SidebarAdmin from "../../components/SidebarAdmin";
 import axios from "axios";
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { FaUser, FaTrash, FaPlus, FaEdit, FaEnvelope } from "react-icons/fa";
+import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminDataPenumpang() {
-  // --- Semua state diganti dari 'driver' ke 'penumpang' ---
-  const [penumpangList, setPenumpangList] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [formData, setFormData] = useState({
+  const [penumpang, setPenumpang] = useState([]);
+
+  // State Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // State Data
+  const [newData, setNewData] = useState({ nama: "", email: "", password: "" });
+  const [editData, setEditData] = useState({
+    id: "",
     nama: "",
     email: "",
     password: "",
   });
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const getAuthToken = () => localStorage.getItem("token");
+  const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
 
-  // --- 1. FUNGSI READ (GET ALL PENUMPANG) ---
-  const fetchPenumpang = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const token = getAuthToken();
-      // Ganti URL API
-      const res = await axios.get("http://localhost:3001/api/admin/penumpang", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPenumpangList(res.data);
-    } catch (err) {
-      setError(
-        "Gagal mengambil data penumpang. " +
-          (err.response?.data?.message || err.message)
+      const res = await axios.get(
+        "http://localhost:3001/api/admin/penumpang",
+        config
       );
+      setPenumpang(res.data);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPenumpang();
+    fetchData();
   }, []);
 
-  // --- 2. FUNGSI UNTUK MODAL ---
-  const handleOpenModal = (data = null) => {
-    setError("");
-    if (data) {
-      // Mode Edit
-      setIsEditing(true);
-      setCurrentId(data.id_user);
-      setFormData({
-        nama: data.nama,
-        email: data.email,
-        password: "",
-      });
-    } else {
-      // Mode Tambah
-      setIsEditing(false);
-      setCurrentId(null);
-      setFormData({ nama: "", email: "", password: "" });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setIsEditing(false);
-    setCurrentId(null);
-  };
-
-  // --- 3. FUNGSI CREATE & UPDATE (SUBMIT MODAL) ---
-  const handleSubmit = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const token = getAuthToken();
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    const dataToSubmit = { ...formData };
-    if (isEditing && !dataToSubmit.password) {
-      delete dataToSubmit.password;
-    }
-
     try {
-      if (isEditing) {
-        // UPDATE (PUT) - Ganti URL API
-        await axios.put(
-          `http://localhost:3001/api/admin/penumpang/${currentId}`,
-          dataToSubmit,
-          config
-        );
-        alert("Penumpang berhasil diperbarui!");
-      } else {
-        // CREATE (POST) - Ganti URL API
-        await axios.post(
-          "http://localhost:3001/api/admin/penumpang",
-          dataToSubmit,
-          config
-        );
-        alert("Penumpang berhasil ditambahkan!");
-      }
-
-      handleCloseModal();
-      fetchPenumpang(); // Muat ulang data
+      await axios.post(
+        "http://localhost:3001/api/admin/penumpang",
+        newData,
+        config
+      );
+      alert("Penumpang berhasil ditambahkan!");
+      setShowAddModal(false);
+      setNewData({ nama: "", email: "", password: "" });
+      fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+      alert("Gagal tambah penumpang");
     }
   };
 
-  // --- 4. FUNGSI DELETE (HAPUS PENUMPANG) ---
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/penumpang/${editData.id}`,
+        editData,
+        config
+      );
+      alert("Penumpang berhasil diupdate!");
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      alert("Gagal update penumpang");
+    }
+  };
+
   const handleDelete = async (id) => {
-    if (window.confirm("Anda yakin ingin menghapus penumpang ini?")) {
-      setLoading(true);
-      setError("");
+    if (window.confirm("Yakin hapus penumpang ini?")) {
       try {
-        const token = getAuthToken();
-        // Ganti URL API
-        await axios.delete(`http://localhost:3001/api/admin/penumpang/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert("Penumpang berhasil dihapus.");
-        fetchPenumpang(); // Muat ulang data
+        await axios.delete(
+          `http://localhost:3001/api/admin/penumpang/${id}`,
+          config
+        );
+        fetchData();
       } catch (err) {
-        setError(err.response?.data?.message || "Gagal menghapus penumpang.");
-      } finally {
-        setLoading(false);
+        alert("Gagal hapus");
       }
     }
+  };
+
+  const openEdit = (p) => {
+    setEditData({ id: p.id_user, nama: p.nama, email: p.email, password: "" });
+    setShowEditModal(true);
   };
 
   return (
-    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
-
-      <main className="flex-grow p-8 bg-gray-100">
+      <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Data Penumpang</h1>
+          <h1 className="text-3xl font-bold text-brand-primary">
+            Kelola Data Penumpang
+          </h1>
           <button
-            onClick={() => handleOpenModal(null)}
-            className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700"
+            onClick={() => setShowAddModal(true)}
+            className="bg-brand-primary hover:bg-brand-dark text-brand-cream px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-all"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Tambah Penumpang
+            <FaPlus /> Tambah Penumpang
           </button>
         </div>
 
-        {error && !isModalOpen && <p className="text-red-500 mb-4">{error}</p>}
-        {loading && <p>Loading...</p>}
-
-        {/* Tabel Data Penumpang */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-brand-primary text-brand-cream">
               <tr>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  No
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Nama Penumpang
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Email
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Aksi
-                </th>
+                <th className="p-4 font-semibold">Nama Penumpang</th>
+                <th className="p-4 font-semibold">Email</th>
+                <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {penumpangList.map((data, index) => (
-                <tr key={data.id_user} className="hover:bg-gray-50">
-                  <td className="py-4 px-6">{index + 1}</td>
-                  <td className="py-4 px-6 font-medium">{data.nama}</td>
-                  <td className="py-4 px-6">{data.email}</td>
-                  <td className="py-4 px-6 flex space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(data)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(data.id_user)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Hapus"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+            <tbody className="divide-y divide-brand-primary/10">
+              {loading ? (
+                <tr>
+                  <td colSpan="3" className="p-4 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : (
+                penumpang.map((p) => (
+                  <tr
+                    key={p.id_user}
+                    className="hover:bg-brand-cream/30 transition-colors"
+                  >
+                    <td className="p-4 font-bold flex items-center gap-3">
+                      <div className="bg-brand-primary/10 p-2 rounded-full text-brand-primary">
+                        <FaUser />
+                      </div>
+                      {p.nama}
+                    </td>
+                    <td className="p-4 text-sm text-brand-dark/80">
+                      <div className="flex items-center gap-2">
+                        <FaEnvelope className="text-brand-primary/40" />{" "}
+                        {p.email}
+                      </div>
+                    </td>
+                    <td className="p-4 text-center flex justify-center gap-2">
+                      <button
+                        onClick={() => openEdit(p)}
+                        className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id_user)}
+                        className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </main>
 
-      {/* --- MODAL TAMBAH/EDIT DATA --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold">
-                {isEditing ? "Edit Data Penumpang" : "Tambah Data Penumpang"}
-              </h3>
-              <button onClick={handleCloseModal}>
-                <XMarkIcon className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nama Penumpang
-                </label>
-                <input
-                  type="text"
-                  value={formData.nama}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder={
-                    isEditing ? "Isi untuk reset password" : "Wajib diisi"
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required={!isEditing}
-                />
-              </div>
-
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4">
+      {/* --- MODAL TAMBAH --- */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
+            <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
+              <FaPlus /> Tambah Penumpang
+            </h2>
+            <form onSubmit={handleAdd} className="space-y-4">
+              <input
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Nama"
+                value={newData.nama}
+                onChange={(e) =>
+                  setNewData({ ...newData, nama: e.target.value })
+                }
+                required
+              />
+              <input
+                type="email"
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Email"
+                value={newData.email}
+                onChange={(e) =>
+                  setNewData({ ...newData, email: e.target.value })
+                }
+                required
+              />
+              <input
+                type="password"
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Password"
+                value={newData.password}
+                onChange={(e) =>
+                  setNewData({ ...newData, password: e.target.value })
+                }
+                required
+              />
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg disabled:bg-gray-400"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow"
                 >
-                  {loading ? "Menyimpan..." : "Simpan"}
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDIT --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-accent">
+            <h2 className="text-xl font-bold text-brand-accent mb-4 flex items-center gap-2">
+              <FaEdit /> Edit Penumpang
+            </h2>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Nama
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.nama}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nama: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Email
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.email}
+                  onChange={(e) =>
+                    setEditData({ ...editData, email: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Password Baru (Opsional)
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  placeholder="Isi untuk ganti password"
+                  value={editData.password}
+                  onChange={(e) =>
+                    setEditData({ ...editData, password: e.target.value })
+                  }
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow"
+                >
+                  Update
                 </button>
               </div>
             </form>

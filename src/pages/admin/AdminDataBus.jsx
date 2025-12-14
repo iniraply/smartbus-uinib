@@ -1,254 +1,420 @@
-// src/pages/admin/AdminDataBus.jsx
+// src/pages/admin/AdminDataBus.jsx (VERSI DEBUGGING & FIX)
+
 import React, { useState, useEffect } from "react";
-import SidebarAdmin from "../../components/SidebarAdmin";
 import axios from "axios";
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { FaBus, FaTrash, FaUserTie, FaPlus, FaEdit } from "react-icons/fa";
+import SidebarAdmin from "../../components/SidebarAdmin";
 
 function AdminDataBus() {
-  const [buses, setBuses] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [formData, setFormData] = useState({
+  const [busList, setBusList] = useState([]);
+  const [driverList, setDriverList] = useState([]);
+
+  // State Modal Tambah
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newBus, setNewBus] = useState({
     nama_bus: "",
+    plat_nomor: "",
     rute: "",
+    status_bus: "Aktif",
   });
+
+  // State Modal Edit
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({
+    id_bus: "",
+    nama_bus: "",
+    plat_nomor: "",
+    rute: "",
+    status_bus: "Aktif",
+  });
+
+  // State Modal Assign Driver
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedBus, setSelectedBus] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState("");
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const getAuthToken = () => localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${getAuthToken()}` } };
 
-  // --- 1. FUNGSI READ ---
-  const fetchBuses = async () => {
+  // --- FETCH DATA ---
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
+      const busRes = await axios.get(
         "http://localhost:3001/api/admin/bus",
         config
       );
-      setBuses(res.data);
-    } catch (err) {
-      setError(
-        "Gagal mengambil data bus. " +
-          (err.response?.data?.message || err.message)
+      setBusList(busRes.data);
+      const driverRes = await axios.get(
+        "http://localhost:3001/api/admin/drivers-list",
+        config
       );
+      setDriverList(driverRes.data);
+    } catch (err) {
+      console.error("Error Fetching Data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBuses();
+    fetchData();
   }, []);
 
-  // --- 2. FUNGSI MODAL ---
-  const handleOpenModal = (data = null) => {
-    setError("");
-    if (data) {
-      setIsEditing(true);
-      setCurrentId(data.id_bus);
-      setFormData({ nama_bus: data.nama_bus, rute: data.rute });
-    } else {
-      setIsEditing(false);
-      setCurrentId(null);
-      setFormData({ nama_bus: "", rute: "" });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  // --- 3. FUNGSI CREATE & UPDATE ---
-  const handleSubmit = async (e) => {
+  // --- HANDLER TAMBAH (DIPERBAIKI) ---
+  const handleAddBus = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
     try {
-      if (isEditing) {
-        await axios.put(
-          `http://localhost:3001/api/admin/bus/${currentId}`,
-          formData,
-          config
-        );
-        alert("Bus berhasil diperbarui!");
-      } else {
-        await axios.post(
-          "http://localhost:3001/api/admin/bus",
-          formData,
-          config
-        );
-        alert("Bus berhasil ditambahkan!");
-      }
-      handleCloseModal();
-      fetchBuses();
+      await axios.post("http://localhost:3001/api/admin/bus", newBus, config);
+      alert("Bus berhasil ditambahkan!");
+      setShowAddModal(false);
+      setNewBus({
+        nama_bus: "",
+        plat_nomor: "",
+        rute: "",
+        status_bus: "Aktif",
+      });
+      fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+      // TAMPILKAN ERROR ASLI
+      console.error("Error Tambah:", err);
+      const pesan = err.response?.data?.message || err.message;
+      alert(`Gagal menambah bus: ${pesan}`);
     }
   };
 
-  // --- 4. FUNGSI DELETE ---
+  // --- HANDLER EDIT (DIPERBAIKI) ---
+  const openEditModal = (bus) => {
+    setEditData({
+      id_bus: bus.id_bus,
+      nama_bus: bus.nama_bus,
+      plat_nomor: bus.plat_nomor,
+      rute: bus.rute,
+      status_bus: bus.status_bus,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateBus = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/bus/${editData.id_bus}`,
+        editData,
+        config
+      );
+      alert("Data bus berhasil diperbarui!");
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      // TAMPILKAN ERROR ASLI
+      console.error("Error Edit:", err);
+      const pesan = err.response?.data?.message || err.message;
+      alert(`Gagal update bus: ${pesan}`);
+    }
+  };
+
+  // --- HANDLER ASSIGN ---
+  const openAssignModal = (bus) => {
+    setSelectedBus(bus);
+    setSelectedDriverId(bus.driver_id || "");
+    setShowAssignModal(true);
+  };
+
+  const handleAssignDriver = async (e) => {
+    e.preventDefault();
+    if (!selectedBus) return;
+    try {
+      await axios.put(
+        `http://localhost:3001/api/admin/bus/${selectedBus.id_bus}/assign`,
+        {
+          driver_id: selectedDriverId || null,
+        },
+        config
+      );
+      alert(`Supir berhasil diupdate`);
+      setShowAssignModal(false);
+      fetchData();
+    } catch (err) {
+      console.error("Error Assign:", err);
+      const pesan = err.response?.data?.message || err.message;
+      alert(`Gagal update supir: ${pesan}`);
+    }
+  };
+
+  // --- HANDLER DELETE ---
   const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        "Anda yakin ingin menghapus bus ini? (Ini mungkin gagal jika bus terdaftar di jadwal)"
-      )
-    ) {
-      setLoading(true);
-      setError("");
+    if (window.confirm("Yakin hapus bus ini?")) {
       try {
         await axios.delete(`http://localhost:3001/api/admin/bus/${id}`, config);
-        alert("Bus berhasil dihapus.");
-        fetchBuses();
+        fetchData();
       } catch (err) {
-        setError(err.response?.data?.message || "Gagal menghapus bus.");
-      } finally {
-        setLoading(false);
+        alert("Gagal hapus bus");
       }
     }
   };
 
   return (
-    <div className="flex" style={{ fontFamily: "Poppins, sans-serif" }}>
+    <div className="flex font-sans bg-brand-cream min-h-screen text-brand-dark">
       <SidebarAdmin />
 
-      <main className="flex-grow p-8 bg-gray-100">
+      <main className="flex-grow p-8 ml-64">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Data Bus</h1>
+          <h1 className="text-3xl font-bold text-brand-primary">
+            Kelola Unit Bus
+          </h1>
           <button
-            onClick={() => handleOpenModal(null)}
-            className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700"
+            onClick={() => setShowAddModal(true)}
+            className="bg-brand-primary hover:bg-brand-dark text-brand-cream px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-all"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Tambah Bus
+            <FaPlus /> Tambah Bus
           </button>
         </div>
 
-        {error && !isModalOpen && <p className="text-red-500 mb-4">{error}</p>}
-        {loading && <p>Loading...</p>}
-
-        {/* Tabel Data Bus */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-brand-primary/10">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-brand-primary text-brand-cream">
               <tr>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Nama Bus
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Rute
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">
-                  Aksi
-                </th>
+                <th className="p-4 font-semibold">Nama Bus</th>
+                <th className="p-4 font-semibold">Plat Nomor</th>
+                <th className="p-4 font-semibold">Rute</th>
+                <th className="p-4 font-semibold">Supir</th>
+                <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {buses.map((bus) => (
-                <tr key={bus.id_bus} className="hover:bg-gray-50">
-                  <td className="py-4 px-6 font-medium">{bus.nama_bus}</td>
-                  <td className="py-4 px-6">{bus.rute}</td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        bus.status_bus === "Aktif"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {bus.status_bus}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 flex space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(bus)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(bus.id_bus)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Hapus"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+            <tbody className="divide-y divide-brand-primary/10">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="p-4 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : (
+                busList.map((bus) => (
+                  <tr
+                    key={bus.id_bus}
+                    className="hover:bg-brand-cream/30 transition-colors"
+                  >
+                    <td className="p-4 font-bold">{bus.nama_bus}</td>
+                    <td className="p-4 font-mono text-sm bg-brand-cream/20 rounded inline-block m-2 px-2 border border-brand-primary/10">
+                      {bus.plat_nomor}
+                    </td>
+                    <td className="p-4 text-sm">{bus.rute}</td>
+                    <td className="p-4">
+                      {bus.nama_driver ? (
+                        <span className="flex items-center gap-2 text-brand-primary font-bold bg-brand-primary/10 px-3 py-1 rounded-full text-sm w-fit">
+                          <FaUserTie /> {bus.nama_driver}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm italic">
+                          Belum ada supir
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center flex justify-center gap-2">
+                      {/* Tombol Atur Supir */}
+                      <button
+                        onClick={() => openAssignModal(bus)}
+                        className="bg-brand-dark hover:bg-black text-white p-2 rounded-lg shadow transition-all"
+                        title="Atur Supir"
+                      >
+                        <FaUserTie />
+                      </button>
+                      {/* Tombol Edit */}
+                      <button
+                        onClick={() => openEditModal(bus)}
+                        className="bg-brand-accent hover:bg-red-700 text-white p-2 rounded-lg shadow transition-all"
+                        title="Edit Bus"
+                      >
+                        <FaEdit />
+                      </button>
+                      {/* Tombol Hapus */}
+                      <button
+                        onClick={() => handleDelete(bus.id_bus)}
+                        className="bg-red-600 hover:bg-red-800 text-white p-2 rounded-lg shadow transition-all"
+                        title="Hapus Bus"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </main>
 
-      {/* --- MODAL TAMBAH/EDIT DATA --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold">
-                {isEditing ? "Edit Bus" : "Tambah Bus"}
-              </h3>
-              <button onClick={handleCloseModal}>
-                <XMarkIcon className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Nama Bus
-                </label>
-                <input
-                  type="text"
-                  value={formData.nama_bus}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama_bus: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Rute</label>
-                <input
-                  type="text"
-                  value={formData.rute}
-                  onChange={(e) =>
-                    setFormData({ ...formData, rute: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-              <div className="flex justify-end gap-3 pt-4">
+      {/* --- MODAL TAMBAH --- */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-primary">
+            <h2 className="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
+              <FaPlus /> Tambah Bus
+            </h2>
+            <form onSubmit={handleAddBus} className="space-y-4">
+              <input
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Nama Bus"
+                value={newBus.nama_bus}
+                onChange={(e) =>
+                  setNewBus({ ...newBus, nama_bus: e.target.value })
+                }
+                required
+              />
+              <input
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Plat Nomor"
+                value={newBus.plat_nomor}
+                onChange={(e) =>
+                  setNewBus({ ...newBus, plat_nomor: e.target.value })
+                }
+                required
+              />
+              <input
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-primary outline-none"
+                placeholder="Rute"
+                value={newBus.rute}
+                onChange={(e) => setNewBus({ ...newBus, rute: e.target.value })}
+                required
+              />
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg disabled:bg-gray-400"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-dark"
                 >
-                  {loading ? "Menyimpan..." : "Simpan"}
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDIT --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-accent">
+            <h2 className="text-xl font-bold text-brand-accent mb-4 flex items-center gap-2">
+              <FaEdit /> Edit Bus
+            </h2>
+            <form onSubmit={handleUpdateBus} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Nama Bus
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.nama_bus}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nama_bus: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Plat Nomor
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.plat_nomor}
+                  onChange={(e) =>
+                    setEditData({ ...editData, plat_nomor: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Rute
+                </label>
+                <input
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.rute}
+                  onChange={(e) =>
+                    setEditData({ ...editData, rute: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-brand-dark">
+                  Status
+                </label>
+                <select
+                  className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-accent outline-none"
+                  value={editData.status_bus}
+                  onChange={(e) =>
+                    setEditData({ ...editData, status_bus: e.target.value })
+                  }
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Rusak">Rusak / Tidak Aktif</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-accent text-white rounded-lg shadow hover:bg-brand-dark"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL ASSIGN --- */}
+      {showAssignModal && selectedBus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-down border-2 border-brand-dark">
+            <h2 className="text-xl font-bold text-brand-dark mb-2">
+              Tugaskan Supir
+            </h2>
+            <form onSubmit={handleAssignDriver} className="space-y-4">
+              <select
+                className="w-full p-3 border border-brand-primary/20 rounded-lg focus:ring-2 focus:ring-brand-dark outline-none cursor-pointer"
+                value={selectedDriverId}
+                onChange={(e) => setSelectedDriverId(e.target.value)}
+              >
+                <option value="">-- Pilih Driver / Kosongkan --</option>
+                {driverList.map((driver) => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.nama}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignModal(false)}
+                  className="px-4 py-2 text-brand-dark hover:bg-brand-cream rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-dark text-white rounded-lg shadow hover:bg-black"
+                >
+                  Simpan
                 </button>
               </div>
             </form>
