@@ -11,7 +11,7 @@ import AdminDataDriver from "./pages/admin/AdminDataDriver";
 import AdminDataPenumpang from "./pages/admin/AdminDataPenumpang";
 import AdminJadwal from "./pages/admin/AdminJadwal";
 import AdminLaporan from "./pages/admin/AdminLaporan";
-import AdminLogout from "./pages/Admin/AdminLogout";
+import AdminLogout from "./pages/admin/AdminLogout";
 import DriverHome from "./pages/driver/DriverHome";
 import DriverAktivasi from "./pages/driver/DriverAktivasi";
 import DriverJadwal from "./pages/driver/DriverJadwal";
