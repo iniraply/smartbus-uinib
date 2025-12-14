@@ -1,15 +1,5 @@
-// src/pages/penumpang/PenumpangLacak.jsx (FIX: KONTRAS WARNA IKON)
-
-import React, { useState, useEffect, useRef } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  Polyline,
-} from "react-leaflet";
+// src/pages/penumpang/PenumpangLacak.jsx
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react"; // Tambah Suspense & lazy
 import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import {
   FaBus,
@@ -20,66 +10,19 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
-import L from "leaflet";
 import { toast } from "react-toastify";
 import BottomNav from "../../components/BottomNav";
 
-// --- Fix Ikon Leaflet ---
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-});
+// --- IMPORT PETA PAKAI LAZY (JANGAN LANGSUNG) ---
+const MapWrapper = lazy(() => import("../../components/MapWrapper"));
 
-// --- IKON CUSTOM (DIPERBAIKI) ---
-const createBusIcon = (isFull) => {
-  // PERBAIKAN: Gunakan HIJAU (Green) untuk Tersedia, MERAH (Red) untuk Penuh
-  const colorClass = isFull ? "bg-red-600" : "bg-green-600";
-  const pointerClass = isFull ? "bg-red-600" : "bg-green-600";
-
-  const iconMarkup = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center w-12 h-12">
-      <div
-        className={`absolute w-12 h-12 ${colorClass} rounded-full border-2 border-white shadow-xl opacity-90 animate-pulse`}
-      ></div>
-      <FaBus className="relative z-10 text-white w-6 h-6" />
-      <div
-        className={`absolute -bottom-1 w-3 h-3 ${pointerClass} rotate-45 border-b-2 border-r-2 border-white`}
-      ></div>
-    </div>
-  );
-  return L.divIcon({
-    html: iconMarkup,
-    className: "custom-bus-icon",
-    iconSize: [48, 48],
-    iconAnchor: [24, 48],
-    popupAnchor: [0, -48],
-  });
-};
-
-const createUserIcon = () => {
-  const iconMarkup = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center">
-      <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md z-20"></div>
-      <div className="absolute w-12 h-12 bg-blue-400 rounded-full opacity-30 animate-ping"></div>
-    </div>
-  );
-  return L.divIcon({
-    html: iconMarkup,
-    className: "custom-user-icon",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
-};
-
+// Tetap simpan konstanta ini di sini karena dipakai logika hitung jarak
 const DESTINATIONS = {
   "Kampus 2": [-0.929989, 100.38667],
   "Kampus 3": [-0.810871, 100.371002],
 };
 
-// --- RUMUS HAVERSINE ---
+// --- RUMUS HAVERSINE (Tetap di sini) ---
 function calculateDistanceAndETA(
   startLat,
   startLng,
@@ -97,24 +40,14 @@ function calculateDistanceAndETA(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
   const distanceStraight = R * c;
   const distanceRoad = distanceStraight * 1.4;
   const timeHours = distanceRoad / speedKmh;
   const timeMinutes = Math.ceil(timeHours * 60);
-
   return {
     distanceKm: distanceRoad.toFixed(1),
     minutes: timeMinutes,
   };
-}
-
-function MapUpdater({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) map.flyTo(center, 15, { animate: true, duration: 1.5 });
-  }, [center, map]);
-  return null;
 }
 
 function PenumpangLacak() {
@@ -132,12 +65,8 @@ function PenumpangLacak() {
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [etaDestination, setEtaDestination] = useState(null);
   const [etaToUser, setEtaToUser] = useState(null);
-
-  // State Lokasi
   const [isLocating, setIsLocating] = useState(false);
-
   const pollingInterval = useRef(null);
-  const getAuthToken = () => localStorage.getItem("token");
 
   // --- FUNGSI AMBIL LOKASI USER ---
   const getUserLocation = () => {
@@ -147,11 +76,10 @@ function PenumpangLacak() {
         (pos) => {
           const newPos = [pos.coords.latitude, pos.coords.longitude];
           setUserLocation(newPos);
-          setMapCenter(newPos); // Peta terbang ke user
+          setMapCenter(newPos);
           setIsLocating(false);
         },
         () => {
-          console.log("Gagal ambil lokasi user");
           toast.error("Gagal mendeteksi lokasi Anda. Pastikan GPS aktif.");
           setIsLocating(false);
         },
@@ -171,12 +99,10 @@ function PenumpangLacak() {
     try {
       const res = await api.get("/api/penumpang/locations", {});
       setActiveBuses(res.data);
-
       if (selectedBusId) {
         const bus = res.data.find((b) => b.id_bus === parseInt(selectedBusId));
         if (bus) {
           setMapCenter([parseFloat(bus.latitude), parseFloat(bus.longitude)]);
-
           if (selectedDestination) {
             const destCoords = DESTINATIONS[selectedDestination];
             const eta = calculateDistanceAndETA(
@@ -187,7 +113,6 @@ function PenumpangLacak() {
             );
             setEtaDestination(eta.minutes);
           }
-
           if (userLocation) {
             const etaUser = calculateDistanceAndETA(
               parseFloat(bus.latitude),
@@ -215,7 +140,6 @@ function PenumpangLacak() {
 
   const handleBusSelect = (id) => {
     setIsDropdownOpen(false);
-
     if (!id) {
       setSelectedBusId("");
       setEtaDestination(null);
@@ -224,7 +148,6 @@ function PenumpangLacak() {
     }
     const busIdInt = parseInt(id);
     setSelectedBusId(busIdInt);
-
     const bus = activeBuses.find((b) => b.id_bus === busIdInt);
     if (bus && userLocation) {
       const etaUser = calculateDistanceAndETA(
@@ -235,7 +158,6 @@ function PenumpangLacak() {
       );
       setEtaToUser(etaUser);
     }
-
     setShowDestinationModal(true);
   };
 
@@ -250,7 +172,6 @@ function PenumpangLacak() {
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream relative font-sans">
-      {/* Header Minimalis */}
       <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
         <button
           onClick={() => navigate(-1)}
@@ -261,75 +182,26 @@ function PenumpangLacak() {
       </header>
 
       <main className="flex-grow relative z-0">
-        <MapContainer
-          center={mapCenter}
-          zoom={14}
-          zoomControl={false}
-          scrollWheelZoom={true}
-          className="h-full w-full"
-          style={{ zIndex: 0 }}
-        >
-          <TileLayer
-            attribution="&copy; OpenStreetMap"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MapUpdater center={mapCenter} />
-
-          {userLocation && (
-            <Marker position={userLocation} icon={createUserIcon()}>
-              <Popup>Lokasi Anda</Popup>
-            </Marker>
-          )}
-
-          {activeBuses.map((bus) => (
-            <Marker
-              key={bus.id_bus}
-              position={[parseFloat(bus.latitude), parseFloat(bus.longitude)]}
-              icon={createBusIcon(bus.status_penumpang === "Penuh")}
-              eventHandlers={{
-                click: () => handleBusSelect(bus.id_bus),
-              }}
-            >
-              <Popup className="custom-popup">
-                <div className="text-center">
-                  <h3 className="font-bold text-brand-primary text-sm">
-                    {bus.nama_bus}
-                  </h3>
-                  <p className="text-xs font-medium text-gray-500">
-                    {bus.rute}
-                  </p>
-                  {bus.status_penumpang === "Penuh" ? (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-full">
-                      PENUH
-                    </span>
-                  ) : (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-full">
-                      TERSEDIA
-                    </span>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-
-          {currentBus && selectedDestination && (
-            <Polyline
-              positions={[
-                [
-                  parseFloat(currentBus.latitude),
-                  parseFloat(currentBus.longitude),
-                ],
-                DESTINATIONS[selectedDestination],
-              ]}
-              pathOptions={{
-                color: "#800000",
-                dashArray: "10, 10",
-                opacity: 0.6,
-                weight: 4,
-              }}
+        {/* --- PETA DISINI (DIBUNGKUS SUSPENSE) --- */}
+        <div className="h-full w-full bg-gray-200">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Memuat Peta...
+              </div>
+            }
+          >
+            <MapWrapper
+              center={mapCenter}
+              userLocation={userLocation}
+              activeBuses={activeBuses}
+              handleBusSelect={handleBusSelect}
+              currentBus={currentBus}
+              selectedDestination={selectedDestination}
+              DESTINATIONS={DESTINATIONS}
             />
-          )}
-        </MapContainer>
+          </Suspense>
+        </div>
 
         {/* Tombol Locate Me */}
         <button
@@ -373,7 +245,6 @@ function PenumpangLacak() {
               />
             </button>
 
-            {/* Dropdown List */}
             {isDropdownOpen && (
               <div className="border-t border-gray-100 max-h-60 overflow-y-auto animate-fade-in-down bg-white">
                 {activeBuses.length === 0 ? (
@@ -484,7 +355,6 @@ function PenumpangLacak() {
                 </span>
               </div>
             </div>
-
             <div className="p-5 flex justify-between items-center bg-white/95 backdrop-blur">
               <div>
                 <h4 className="font-bold text-xl text-brand-dark">

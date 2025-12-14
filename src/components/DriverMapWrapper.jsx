@@ -1,18 +1,60 @@
-// src/pages/driver/DriverAktivasi.jsx (FINAL FIX: LAZY LOAD)
+// src/pages/driver/DriverAktivasi.jsx (FINAL CLEAN + TOASTIFY + SWEETALERT)
 
-import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { useNavigate } from "react-router-dom";
-import api from "../../utils/api";
-import { FaSignal, FaStopCircle, FaUsers, FaUsersSlash } from "react-icons/fa";
+import api from "../utils/api";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import {
+  FaBus,
+  FaSignal,
+  FaStopCircle,
+  FaUsers,
+  FaUsersSlash,
+} from "react-icons/fa";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import DriverBottomNav from "../../components/DriverBottomNav";
+import DriverBottomNav from "../components/DriverBottomNav";
 
-// --- PANGGIL PETA PAKAI LAZY LOAD (SUPAYA TIDAK ERROR SAAT BUILD) ---
-const DriverMapWrapper = lazy(() =>
-  import("../../components/DriverMapWrapper")
-);
+// --- 1. Fix Ikon Leaflet ---
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+// --- 2. Ikon Bus Custom ---
+const createBusIcon = () => {
+  const iconMarkup = renderToStaticMarkup(
+    <div className="relative flex items-center justify-center w-12 h-12">
+      <div className="absolute w-12 h-12 bg-brand-primary rounded-full border-2 border-white shadow-xl opacity-90 animate-pulse"></div>
+      <FaBus className="relative z-10 text-white w-6 h-6" />
+      <div className="absolute -bottom-1 w-3 h-3 bg-brand-primary rotate-45 border-b-2 border-r-2 border-white"></div>
+    </div>
+  );
+  return L.divIcon({
+    html: iconMarkup,
+    className: "custom-bus-icon",
+    iconSize: [48, 48],
+    iconAnchor: [24, 48],
+    popupAnchor: [0, -48],
+  });
+};
+
+// --- 3. Komponen Update Peta ---
+function MapUpdater({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 16, { animate: true, duration: 1.5 });
+    }
+  }, [position, map]);
+  return null;
+}
 
 function DriverAktivasi() {
   const navigate = useNavigate();
@@ -20,10 +62,11 @@ function DriverAktivasi() {
   const [isFull, setIsFull] = useState(false);
   const [position, setPosition] = useState([
     -0.8108711135090128, 100.37100177052656,
-  ]); // Default UIN IB Padang
+  ]); // Default UIN IB Padang (Kampus 2/3 Area)
   const [loading, setLoading] = useState(false);
 
   const locationInterval = useRef(null);
+  const getAuthToken = () => localStorage.getItem("token");
 
   // Cek status awal
   useEffect(() => {
@@ -87,6 +130,7 @@ function DriverAktivasi() {
   const handleToggleStatus = async () => {
     const newStatus = !isActive ? "Aktif" : "Tidak Aktif";
 
+    // --- GANTI CONFIRM BAWAAN DENGAN SWEETALERT ---
     const result = await Swal.fire({
       title: !isActive ? "Aktifkan Layanan?" : "Matikan Layanan?",
       text: !isActive
@@ -150,7 +194,7 @@ function DriverAktivasi() {
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-brand-cream relative">
-      {/* HEADER: Floating Back Button */}
+      {/* HEADER BARU: Floating Back Button */}
       <header className="absolute top-0 left-0 right-0 p-4 z-[500] flex items-center pointer-events-none">
         <button
           onClick={() => navigate(-1)}
@@ -160,19 +204,39 @@ function DriverAktivasi() {
         </button>
       </header>
 
-      {/* AREA PETA (DIBUNGKUS SUSPENSE AGAR AMAN) */}
-      <div className="flex-grow relative z-0 bg-gray-200">
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-full text-gray-500 font-medium">
-              Memuat Peta...
-            </div>
-          }
+      {/* Peta Full Screen */}
+      <div className="flex-grow relative z-0">
+        <MapContainer
+          center={position}
+          zoom={16}
+          zoomControl={false}
+          scrollWheelZoom={true}
+          className="h-full w-full"
+          style={{ zIndex: 0 }}
         >
-          <DriverMapWrapper position={position} isActive={isActive} />
-        </Suspense>
+          <TileLayer
+            attribution="&copy; OpenStreetMap"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-        {/* PANEL KONTROL (Floating di atas Peta) */}
+          {/* Marker Driver */}
+          <Marker position={position} icon={createBusIcon()}>
+            <Popup className="custom-popup">
+              <div className="text-center">
+                <p className="font-bold text-brand-primary text-sm">
+                  Lokasi Anda
+                </p>
+                <p className="text-[10px] text-gray-500">
+                  {isActive ? "🟢 Live GPS ON" : "🔴 Live GPS OFF"}
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+
+          <MapUpdater position={position} />
+        </MapContainer>
+
+        {/* PANEL KONTROL (Floating) */}
         <div className="absolute top-20 left-4 right-4 flex flex-col gap-3 z-[500]">
           {/* 1. Kartu Status GPS */}
           <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl flex justify-between items-center border border-white/50 animate-fade-in-down">
