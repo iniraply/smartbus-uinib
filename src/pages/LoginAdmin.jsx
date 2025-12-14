@@ -40,10 +40,10 @@ function LoginAdmin() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-brand-cream">
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl">
         <div className="text-center">
-          <h1 className="text-xl font-bold text-gray-800">Selamat Datang</h1>
+          <h1 className="text-xl font-bold text-brand-dark">Selamat Datang</h1>
           <h2 className="text-3xl font-bold">SmartBus UIN IB</h2>
           <p className="mt-2 font-semibold text-gray-600">Login Admin</p>{" "}
           {/* <-- GANTI JUDUL */}
@@ -91,7 +91,7 @@ function LoginAdmin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md"
+              className="w-full py-3 px-4 bg-brand-accent text-white font-semibold rounded-md shadow-md"
             >
               {loading ? "Loading..." : "Login"}
             </button>

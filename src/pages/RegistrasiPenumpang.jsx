@@ -54,7 +54,7 @@ function RegistrasiPenumpang() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-brand-cream">
       <div
         className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl"
         style={{ fontFamily: "sans-serif" }}
@@ -147,7 +147,7 @@ function RegistrasiPenumpang() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md disabled:bg-gray-400"
+              className="w-full py-3 px-4 bg-brand-accent text-white font-semibold rounded-md shadow-md disabled:bg-gray-400 hover:bg-brand-dark"
             >
               {loading ? "Mendaftar..." : "Daftar"}
             </button>
@@ -158,7 +158,7 @@ function RegistrasiPenumpang() {
             Sudah punya akun?{" "}
             <Link
               to="/login/penumpang"
-              className="font-semibold text-blue-600 hover:underline"
+              className="font-semibold text-brand-accent hover:underline"
             >
               Login
             </Link>

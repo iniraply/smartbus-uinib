@@ -48,13 +48,13 @@ function LoginPenumpang() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-brand-cream">
       <div
         className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl"
         style={{ fontFamily: "sans-serif" }}
       >
         <div className="text-center">
-          <h1 className="text-xl font-bold text-gray-800">Selamat Datang</h1>
+          <h1 className="text-xl font-bold text-brand-dark">Selamat Datang</h1>
           <h2 className="text-3xl font-bold">SmartBus UIN IB</h2>
           <p className="mt-2 font-semibold text-gray-600">Login Penumpang</p>
         </div>
@@ -105,7 +105,7 @@ function LoginPenumpang() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md disabled:bg-gray-400"
+              className="w-full py-3 px-4 bg-brand-accent text-white font-semibold rounded-md shadow-md disabled:bg-gray-400 hover:bg-brand-dark"
             >
               {loading ? "Loading..." : "Login"}
             </button>
@@ -114,8 +114,8 @@ function LoginPenumpang() {
           <p className="text-sm text-center text-gray-600">
             Belum punya akun?{" "}
             <Link
-              to="/registrasi/penumpang"
-              className="font-semibold text-blue-600 hover:underline"
+              to="/register/penumpang"
+              className="font-semibold text-brand-accent hover:underline"
             >
               Registrasi
             </Link>
